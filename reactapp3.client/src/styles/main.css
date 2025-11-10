@@ -1,0 +1,677 @@
+/* ---------------------- */
+/* GLOBAL FIXES           */
+/* ---------------------- */
+html,
+body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    overflow-x: hidden;
+    background: white;
+    font-family: "Segoe UI", sans-serif;
+}
+
+/* ---------------------- */
+/* HEADER BAR             */
+/* ---------------------- */
+.header-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #e53935;
+    color: white;
+    padding: 12px 40px;
+    height: 70px;
+    width: 100vw;
+    box-sizing: border-box;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.profile-circle {
+    width: 42px;
+    height: 42px;
+    background: #f1f1f1;
+    border-radius: 50%;
+}
+
+.header-left h3 {
+    font-weight: 500;
+    font-size: 18px;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+/* ---------------------- */
+/* ICON BUTTONS (NO BOXES) */
+/* ---------------------- */
+.logout-btn,
+.settings-btn {
+    background: none;
+    border: none;
+    outline: none;
+    box-shadow: none;
+    padding: 0;
+    margin: 0;
+    color: inherit;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+    .logout-btn:focus,
+    .logout-btn:active,
+    .settings-btn:focus,
+    .settings-btn:active {
+        outline: none;
+        border: none;
+        box-shadow: none;
+        background: none;
+    }
+
+.logout-btn {
+    color: white;
+    font-size: 40px;
+}
+
+    .logout-btn:hover {
+        transform: scale(1.1);
+        opacity: 0.85;
+    }
+
+.settings-btn {
+    color: #e53935;
+    font-size: 44px;
+}
+
+    .settings-btn:hover {
+        transform: rotate(25deg) scale(1.05);
+        opacity: 0.9;
+    }
+
+/* ---------------------- */
+/* SETTINGS ICON BELOW HEADER */
+/* ---------------------- */
+.settings-container {
+    display: flex;
+    justify-content: flex-end;
+    padding: 12px 40px 0 40px;
+    background: white;
+}
+
+/* ---------------------- */
+/* PAGE LAYOUT            */
+/* ---------------------- */
+.main-page {
+    background: white;
+    min-height: 100vh;
+    width: 100vw;
+    box-sizing: border-box;
+    overflow-x: hidden;
+}
+
+.projects-container {
+    width: 100vw;
+    margin: 0;
+    padding: 30px 80px 40px 80px;
+    box-sizing: border-box;
+}
+
+/* ---------------------- */
+/* PROJECTS TITLE          */
+/* ---------------------- */
+.projects-title {
+    font-size: 48px;
+    color: #c62828;
+    font-weight: 700;
+    margin-top: 0;
+    margin-bottom: 8px;
+    letter-spacing: 0.2px;
+    line-height: 1.1;
+}
+
+.title-line {
+    width: 100%;
+    height: 2px;
+    background: #c62828;
+    margin-bottom: 25px;
+}
+
+/* ---------------------- */
+/* SORT BAR               */
+/* ---------------------- */
+.sort-bar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 35px;
+    flex-wrap: wrap;
+}
+
+    .sort-bar h2 {
+        color: #c62828;
+        font-weight: 600;
+        font-size: 20px;
+    }
+
+    .sort-bar button {
+        border: 1px solid #ccc;
+        background: none;
+        padding: 9px 18px;
+        border-radius: 25px;
+        cursor: pointer;
+        font-weight: 500;
+        font-size: 15px;
+        transition: all 0.2s ease;
+    }
+
+        .sort-bar button.active {
+            background: #e53935;
+            color: white;
+            border-color: #e53935;
+        }
+
+        .sort-bar button:hover:not(.active) {
+            background: #fceaea;
+        }
+
+/* ---------------------- */
+/* PROJECT GRID            */
+/* ---------------------- */
+.project-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+    width: 100%;
+    justify-content: center;
+}
+
+@media (max-width: 1400px) {
+    .projects-container {
+        padding: 30px 60px;
+    }
+
+    .project-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 900px) {
+    .projects-container {
+        padding: 25px 40px;
+    }
+
+    .project-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ---------------------- */
+/* PROJECT CARD            */
+/* ---------------------- */
+.project-card {
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #ddd;
+    background: white;
+    transition: transform 0.3s, box-shadow 0.3s;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+    .project-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+.project-image {
+    flex: 1;
+}
+
+    .project-image img {
+        width: 100%;
+        height: 220px;
+        object-fit: cover;
+    }
+
+/* ---------------------- */
+/* PROJECT INFO BAR        */
+/* ---------------------- */
+.project-info {
+    background: #e53935;
+    color: white;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.project-icon {
+    font-size: 26px;
+}
+
+.project-info h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.project-info p {
+    font-size: 13px;
+    opacity: 0.9;
+    margin: 3px 0 0;
+}
+
+/* ---------------------- */
+/* ADD CARD (+) FIXED      */
+/* ---------------------- */
+.add-card {
+    border: 2px dashed #e57373;
+    background: #fff5f5;
+    border-radius: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    height: 100%;
+    min-height: 250px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+    .add-card:hover {
+        background: #ffecec;
+        transform: translateY(-4px);
+        border-color: #e53935;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+.add-plus {
+    color: #e53935;
+    font-size: 54px;
+    font-weight: 700;
+    user-select: none;
+    transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.add-card:hover .add-plus {
+    transform: scale(1.2);
+    color: #c62828;
+}
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    justify-content: center;
+    align-items: center; /* ?? Centers vertically and horizontally */
+    z-index: 999;
+}
+
+/* Compact, centered modal */
+.modal {
+    background: #fff;
+    padding: 24px 28px;
+    width: 75%;
+    max-width: 740px;
+    border-radius: 12px;
+    position: relative;
+    box-shadow: 0 0 18px rgba(0, 0, 0, 0.18);
+    color: #e53935;
+    box-sizing: border-box;
+    text-align: left;
+    max-height: 90vh; /* prevent it from touching top/bottom edges */
+    overflow-y: auto; /* only scrolls internally if content overflows */
+}
+
+.modal-close {
+    position: absolute;
+    top: 15px;
+    right: 18px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #e53935;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+    .modal-close:hover {
+        transform: rotate(90deg);
+    }
+
+/* TITLE + SUBTITLE */
+.modal-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: #e53935;
+}
+
+.modal-subtitle {
+    font-size: 13px;
+    color: #e57373;
+    margin-bottom: 25px;
+}
+
+/* ---------------------- */
+/* INPUTS (split for control) */
+/* ---------------------- */
+
+/* Project Name field */
+.modal input {
+    width: 60%;
+    border: 1.5px solid #e53935;
+    border-radius: 6px;
+    padding: 10px;
+    margin-bottom: 20px;
+    color: #e53935;
+    transition: all 0.3s ease;
+}
+
+
+/* Project Description field */
+.modal textarea {
+    width: 80%;
+    border: 1.5px solid #e53935;
+    border-radius: 6px;
+    padding: 2px;
+    margin-bottom: 20px;
+    color: #e53935;
+    transition: all 0.3s ease;
+    resize: none; /* disables resize handle */
+}
+
+/* Make sure labels are above each field */
+.modal label {
+    display: block;
+    margin-bottom: 6px;
+    color: #e53935;
+    font-weight: 500;
+}
+
+/* Placeholder color for both */
+.modal input::placeholder,
+.modal textarea::placeholder {
+    color: #e57373;
+}
+
+/* Focus effect for both */
+.modal input:focus,
+.modal textarea:focus {
+    outline: none;
+    border-color: #c62828;
+    box-shadow: 0 0 5px rgba(229, 57, 53, 0.4);
+}
+
+/* ---------------------- */
+/* UPLOAD BOXES */
+/* ---------------------- */
+.upload-container {
+    display: flex;
+    gap: 25px;
+    margin-bottom: 25px;
+}
+
+.upload-box {
+    flex: 1;
+    border: 2px dashed #e57373;
+    border-radius: 12px;
+    padding: 30px;
+    text-align: center;
+    color: #e53935;
+    transition: all 0.3s ease;
+}
+
+    .upload-box:hover {
+        background: #fff5f5;
+        border-color: #e53935;
+    }
+
+    .upload-box button {
+        margin-top: 10px;
+        background: white;
+        border: 1.5px solid #e53935;
+        color: #e53935;
+        padding: 7px 14px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: background 0.3s, color 0.3s;
+    }
+
+        .upload-box button:hover {
+            background: #e53935;
+            color: white;
+        }
+
+/* ---------------------- */
+/* LABEL SECTION FIXED (Figma Accurate) */
+/* ---------------------- */
+.label-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.label-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 5px;
+}
+
+.label-item {
+    background: #e53935;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+}
+
+.label-remove {
+    cursor: pointer;
+    font-weight: bold;
+    opacity: 0.9;
+    transition: opacity 0.2s;
+}
+
+    .label-remove:hover {
+        opacity: 0.6;
+    }
+
+.label-add {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0; /* remove all flex gap */
+    margin-top: 0;
+    margin-bottom: 12px;
+}
+
+    .label-add input {
+        width: 100%;
+        border: 1.5px solid #e57373;
+        border-radius: 8px;
+        padding: 8px;
+        color: #e53935;
+        margin-bottom: 0; /* ?? remove input’s built-in spacing */
+    }
+
+        .label-add input::placeholder {
+            color: #e57373;
+        }
+
+    .label-add button {
+        background: #e53935;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 5px 30px;
+        font-size: 24px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.3s ease, transform 0.2s ease;
+        align-self: flex-start;
+        line-height: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 8px; /* tiniest possible spacing */
+    }
+
+        .label-add button:hover {
+            background: #c62828;
+            transform: translateY(-1px);
+        }
+
+/* ---------------------- */
+/* MULTI-USER MODE FIXED ALIGNMENT */
+/* ---------------------- */
+.multiuser-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #e53935;
+    font-weight: 500;
+    margin-bottom: 25px;
+}
+
+    .multiuser-toggle input[type="checkbox"] {
+        accent-color: #e53935;
+        width: 18px;
+        height: 18px;
+        margin: 0;
+        position: relative;
+        top: 0;
+        transform: translateY(1px);
+    }
+
+/* ---------------------- */
+/* DONE BUTTON */
+/* ---------------------- */
+.modal-done {
+    background: #e53935;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 26px;
+    font-size: 16px;
+    font-weight: 600;
+    float: right;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.2s;
+}
+
+    .modal-done:hover {
+        background: #c62828;
+        transform: translateY(-2px);
+    }
+
+/* ---------------------- */
+/* GLOBAL BUTTON FOCUS FIX */
+/* ---------------------- */
+button:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* ---------------------- */
+/* FIX: Make only textboxes white */
+/* ---------------------- */
+
+.modal input[type="text"],
+.modal textarea {
+    background: #ffffff !important; /* white box only */
+    color: #e53935 !important; /* red typed text */
+    -webkit-text-fill-color: #e53935 !important; /* fixes Chrome autofill dark bug */
+    box-shadow: none !important;
+}
+
+    /* keep placeholder consistent */
+    .modal input[type="text"]::placeholder,
+    .modal textarea::placeholder {
+        color: #e57373;
+    }
+
+/* ---------------------- */
+/* FIXED: Perfectly sized white checkbox with red accent */
+/* ---------------------- */
+.multiuser-toggle input[type="checkbox"] {
+    appearance: none;
+    width: 10px; /* slightly smaller box */
+    height: 12px;
+    border: 2px solid #e53935;
+    border-radius: 4px;
+    background: #ffffff;
+    cursor: pointer;
+    position: relative;
+    top: 0px; /* aligns better with text */
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+    .multiuser-toggle input[type="checkbox"]:checked {
+        background-color: #e53935;
+        border-color: #e53935;
+    }
+
+        .multiuser-toggle input[type="checkbox"]:checked::after {
+            content: "?";
+            position: absolute;
+            color: white;
+            font-size: 20px; /* smaller and fits inside box */
+            left: 2.5px;
+            top: -2px;
+        }
+
+/* ---------------------- */
+/* FIX: Make unselected sort buttons visible */
+/* ---------------------- */
+.sort-bar button {
+    border: 1.5px solid #e53935;
+    background: #fff5f5; /* soft pink background */
+    color: #e53935; /* readable red text */
+    padding: 9px 18px;
+    border-radius: 25px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 15px;
+    transition: all 0.2s ease;
+}
+
+    /* Active (selected) button */
+    .sort-bar button.active {
+        background: #e53935;
+        color: white;
+        border-color: #e53935;
+    }
+
+    /* Hover effect for inactive buttons */
+    .sort-bar button:hover:not(.active) {
+        background: #ffeaea;
+        border-color: #e53935;
+    }
+
+/* ---------------------- */
+/* PREVENT BACKGROUND SCROLL WHEN MODAL OPEN */
+/* ---------------------- */
+body.modal-open {
+    overflow: hidden !important;
+    height: 100vh;
+}
