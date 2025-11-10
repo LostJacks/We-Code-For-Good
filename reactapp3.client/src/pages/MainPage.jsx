@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import ProjectCard from "../components/ProjectCard";
 import AddProjectCard from "../components/AddProjectCard";
 import SortBar from "../components/SortBar";
@@ -30,6 +30,8 @@ export default function MainPage() {
 
     return (
         <div className="main-page">
+            {/* ✅ Add the header bar at the very top */}
+            <HeaderBar />
 
             <div className="projects-container">
                 <h1 className="projects-title">Projects</h1>
