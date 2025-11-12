@@ -7,11 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Services\" />
+    <ProjectReference Include="..\LabelingTool.DAL\LabelingTool.DAL.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\LabelingTool.DAL\LabelingTool.DAL.csproj" />
+    <Folder Include="Services\" />
   </ItemGroup>
 
 </Project>
