@@ -1,0 +1,205 @@
+@import url('https://fonts.googleapis.com/css2?family=Raleway:wght@400;700;900&display=swap');
+
+.auth-box {
+    /* Responsive container: cap at original design width but shrink on smaller viewports */
+    width: min(1097px, 92vw);
+    min-width: 1097px;
+    min-height: 735px;
+    margin: 32px auto;
+    padding: 18px;
+    box-sizing: border-box;
+}
+.auth-box {
+border-radius: 20px;
+border: 1px solid rgba(255, 255, 255, 0.30);
+background: rgba(255, 255, 255, 0.16);
+box-shadow: 0 8px 24px 23px rgba(0, 0, 0, 0.25);
+backdrop-filter: blur(12.5px);
+}
+.body {
+    width: 1280px;
+height: 832px;}
+
+.welcome-back {
+    width: auto;
+    color: #E74026;
+    display: block;
+    margin-left: 60px;
+    font-family: 'Raleway', sans-serif;
+    font-size: clamp(28px, 4vw, 50px);
+    font-style: normal;
+    font-weight: 700;
+    line-height: normal;
+    margin-top: 40px;
+}
+
+.no-account {
+color: #5A5450;
+
+font-family: 'Raleway', sans-serif;
+font-size: 20px;
+font-style: normal;
+font-weight: 500;
+line-height: normal;
+margin-top: 23px;
+margin-left: 60px;
+display: inline-block;
+vertical-align: top;
+}
+.register{
+    color: #E74026;
+
+font-family: 'Raleway', sans-serif;
+font-size: 20px;
+font-style: normal;
+font-weight: 500;
+line-height: normal;
+margin-top: 23px;
+margin-left: 4px; 
+display: inline-block;
+vertical-align: top;
+}
+.email-box {
+    width: min(519px, 80%);
+    height: 79px;
+    flex-shrink: 0;
+    border-radius: 24px;
+    border: 1px solid #E74026;
+    background: #F8F8FF;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    backdrop-filter: blur(8px);
+    margin-top: 28px;
+    margin-left: 4%;
+    position: relative; 
+}
+.password-box{
+    width: min(519px, 80%);
+    height: 78px;
+    flex-shrink: 0;
+    border-radius: 24px;
+    border: 1px solid #E74026;
+    background: #F8F8FF;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    backdrop-filter: blur(8px);
+    margin-top: 18px;
+    margin-left: 4%;
+    position: relative;
+}
+
+.email-text {
+    color: #666;
+text-align: left; 
+font-family: Raleway ,sans-serif;   
+font-size: 15px;
+font-style: normal;
+font-weight: 400;
+line-height: normal;
+position: absolute;
+left: 16px; 
+top: 7px;   
+display: block;
+}
+
+.email-icon{
+    width: 27.75px;
+height: 21.583px;
+flex-shrink: 0;
+fill: #E74026;
+right: 25px;
+top: 28px;
+position: absolute;
+display: block;
+}
+
+.email-input{
+    display: flex;
+    width: calc(100% - 70px); /* leave room for icon */
+    height: 35px;
+    flex-direction: column;
+    justify-content: center;
+    flex-shrink: 0;
+    color: rgba(46, 46, 46, 0.00);
+    font-family: Raleway;
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: normal;
+    letter-spacing: 0.2px;
+    display: block;
+    left: 18px;
+    top: 29px;
+    position: absolute;
+}
+
+/* Password box inner elements: mirror email positioning (16px left, 7px top for label) */
+.password-text {
+    color: #666;
+text-align: left;
+font-family: Raleway, sans-serif;
+font-size: 15px;
+font-style: normal;
+font-weight: 400;
+line-height: normal;
+position: absolute;
+left: 16px;
+top: 7px;   
+display: block;
+}
+
+.password-icon{
+    width: 27.75px;
+height: 21.583px;
+flex-shrink: 0;
+fill: #E74026;
+right: 25px;
+top: 28px;
+position: absolute;
+display: block;
+}
+
+.password-input {
+    display: flex;
+    width: calc(100% - 70px); /* leave room for toggle button */
+    height: 35px;
+    flex-direction: column;
+    justify-content: center;
+    flex-shrink: 0;
+    color: #000;
+    background: #fff;
+    border: none;
+    outline: none;
+    font-family: Raleway, sans-serif;
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: normal;
+    letter-spacing: 0.2px;
+    display: block;
+    left: 18px;
+    top: 29px;
+    position: absolute;
+    box-shadow: none;
+}
+
+/* Toggle button that sits over the password input on the right */
+.password-toggle-btn {
+    position: absolute;
+    right: 18px;
+    top: 28px;
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 22px;
+    cursor: pointer;
+    z-index: 3;
+}
+
+.password-toggle-btn[disabled] {
+    cursor: default;
+    opacity: 0.5;
+}

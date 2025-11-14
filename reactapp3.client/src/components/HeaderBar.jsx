@@ -1,8 +1,10 @@
 import React from "react";
 import { FaCog, FaSignOutAlt } from "react-icons/fa";
 import "../styles/main.css";
+import { useNavigate } from "react-router-dom";
 
 export default function HeaderBar() {
+    const navigate = useNavigate();
     return (
         <>
 
@@ -13,9 +15,10 @@ export default function HeaderBar() {
                 </div>
 
                 <div className="header-right">
-                    <button className="logout-btn" title="Logout">
-                        <FaSignOutAlt />
-                    </button>
+                   
+                    
+                <button className="logout-btn" title="Logout" onClick={() => navigate("/login")}><FaSignOutAlt /> </button>
+                
                 </div>
             </header>
 
