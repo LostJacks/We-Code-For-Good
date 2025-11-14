@@ -1,15 +1,20 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36623.8 d17.14
+VisualStudioVersion = 17.14.36623.8
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "reactapp3.client", "reactapp3.client\reactapp3.client.esproj", "{43A694DC-0D06-BFA2-703B-A0A67B7C94E5}"
+	ProjectSection(ProjectDependencies) = postProject
+		{FD624E2D-C602-4BDE-B284-6EF005B4279B} = {FD624E2D-C602-4BDE-B284-6EF005B4279B}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Smart Server", "ReactApp3.Server\Smart Server.csproj", "{2180B07F-2C9A-4999-B139-51BDBC65960A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LabelingTool.DAL", "LabelingTool.DAL\LabelingTool.DAL.csproj", "{450FD3BC-8311-48C9-B312-F19CA2965A90}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LabelingTool.BLL", "LabelingTool.BLL\LabelingTool.BLL.csproj", "{2F7F791A-C736-4A6A-9893-C345B21E553C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Model", "Model\Model.csproj", "{FD624E2D-C602-4BDE-B284-6EF005B4279B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,6 +40,10 @@ Global
 		{2F7F791A-C736-4A6A-9893-C345B21E553C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2F7F791A-C736-4A6A-9893-C345B21E553C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2F7F791A-C736-4A6A-9893-C345B21E553C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FD624E2D-C602-4BDE-B284-6EF005B4279B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FD624E2D-C602-4BDE-B284-6EF005B4279B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FD624E2D-C602-4BDE-B284-6EF005B4279B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FD624E2D-C602-4BDE-B284-6EF005B4279B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

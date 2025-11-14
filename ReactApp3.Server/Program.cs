@@ -1,58 +1,58 @@
-﻿using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+using System;
+using System.Text;
+using LabelingTool.BLL.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using System.Text.Json.Serialization; // ✅ ADD THIS
-using LabelingTool.DAL;
+using Microsoft.IdentityModel.Tokens;
+using Model;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ✅ Add controllers (API endpoints) + fix circular reference issue
-builder.Services.AddControllers()
-    .AddJsonOptions(x =>
-    {
-        x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles; // ✅ Fix for Project ↔ Labels loop
-        x.JsonSerializerOptions.WriteIndented = true;
-    });
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
 
-// ✅ Add Swagger for API testing
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
-// ✅ Enable CORS (allow frontend requests)
-builder.Services.AddCors(options =>
+builder.Services.AddIdentity<AppUser, IdentityRole<int>>(options =>
 {
-    options.AddDefaultPolicy(policy =>
+    options.User.RequireUniqueEmail = true;
+    options.Password.RequiredLength = 8;
+    options.Lockout.MaxFailedAccessAttempts = 5;
+})
+.AddEntityFrameworkStores<AppDbContext>()
+.AddDefaultTokenProviders();
+
+builder.Services.AddCors(o => o.AddPolicy("spa", options =>
+    options.WithOrigins("http://localhost:5173")
+     .AllowAnyHeader().AllowAnyMethod().AllowCredentials()));
+
+var signingKey = new SymmetricSecurityKey(
+    Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SigningKey"]!));
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+.AddJwtBearer(o =>
+{
+    o.TokenValidationParameters = new()
     {
-        policy.AllowAnyOrigin()
-              .AllowAnyHeader()
-              .AllowAnyMethod();
-    });
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = signingKey,
+        ClockSkew = TimeSpan.Zero
+    };
 });
 
-// ✅ Register your EF Core database context
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddAuthorization();
+builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddControllers()
+    .AddJsonOptions(o => o.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase);
 
 var app = builder.Build();
 
-/* ✅ Enable detailed error pages (development mode) */
-if (app.Environment.IsDevelopment())
-{
-    app.UseDeveloperExceptionPage();
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
-// ✅ Serve static files (for /wwwroot/uploads etc.)
-app.UseStaticFiles();
-
-// ✅ Enable routing & CORS
-app.UseRouting();
-app.UseCors();
-
-// ✅ Map API controllers
+app.UseHttpsRedirection();
+app.UseCors("spa");
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapControllers();
-
-// ✅ Run the web app
 app.Run();

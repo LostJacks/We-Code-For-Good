@@ -9,27 +9,22 @@
 		<SpaProxyServerUrl>https://localhost:55106</SpaProxyServerUrl>
 	</PropertyGroup>
 
-	<ItemGroup>
-		<PackageReference Include="Microsoft.AspNetCore.SpaProxy" Version="8.*-*" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.10">
-		  <PrivateAssets>all</PrivateAssets>
-		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
-		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
-	</ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.11" />
+    <PackageReference Include="Microsoft.AspNetCore.SpaProxy" Version="8.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.11">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.6" />
+  </ItemGroup>
 
 	<!-- ✅ Must be its own ItemGroup -->
 	<ItemGroup>
 		<FrameworkReference Include="Microsoft.AspNetCore.App" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<ProjectReference Include="..\LabelingTool.BLL\LabelingTool.BLL.csproj" />
-		<ProjectReference Include="..\LabelingTool.DAL\LabelingTool.DAL.csproj" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<Folder Include="wwwroot\uploads\" />
 	</ItemGroup>
 
 </Project>
