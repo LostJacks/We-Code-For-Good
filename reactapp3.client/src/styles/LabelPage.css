@@ -1,0 +1,834 @@
+﻿
+
+.label-page {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #fafafa;
+}
+
+
+/* FIXED 1920x1080 BASE AREA */
+.app-base {
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    position: relative;
+}
+
+/* SCALE WRAPPER */
+.app-scale-wrapper {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    transform-origin: top center;
+}
+
+
+.label-page {
+    padding-bottom: 20px; /* adds breathing room above taskbar */
+}
+
+/* Header container */
+.label-header {
+    height: 70px;
+    background: #ffffff;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 40px;
+}
+
+/* ---------------------- */
+/* HEADER LEFT            */
+/* ---------------------- */
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.autosave-text {
+    font-weight: 500;
+    font-size: 15px;
+}
+
+/* AUTOSAVE SWITCH (TOP LEFT) */
+.autosave-switch {
+    position: relative;
+    width: 34px;
+    height: 18px;
+}
+
+    .autosave-switch input {
+        display: none;
+    }
+
+    .autosave-switch .autosave-slider {
+        position: absolute;
+        inset: 0;
+        background: #fff;
+        border: 2px solid #e53935;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: 0.25s;
+    }
+
+        .autosave-switch .autosave-slider::before {
+            content: "";
+            width: 14px;
+            height: 14px;
+            background: #e53935;
+            position: absolute;
+            border-radius: 50%;
+            top: 50%;
+            left: 1px;
+            transform: translateY(-50%);
+            transition: 0.25s;
+        }
+
+    /* Autosave ON */
+    .autosave-switch input:checked + .autosave-slider {
+        background: #e53935;
+    }
+
+        .autosave-switch input:checked + .autosave-slider::before {
+            transform: translate(16px, -50%);
+            background: #fff;
+        }
+
+/* ---------------------- */
+/* HEADER RIGHT           */
+/* ---------------------- */
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.settings-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+}
+
+.settings-icon {
+    font-size: 22px;
+    color: #e53935;
+}
+
+.settings-btn:hover .settings-icon {
+    color: #b32c2b;
+}
+
+/* ---------------------- */
+/* SETTINGS DROPDOWN      */
+/* ---------------------- */
+.settings-dropdown {
+    position: absolute;
+    top: 70px;
+    right: 40px;
+    width: 260px;
+    background: #fff;
+    border: 2px solid #e53935;
+    border-radius: 16px;
+    padding: 14px 18px;
+    z-index: 999;
+    box-shadow: 0 10px 22px rgba(0,0,0,0.1);
+}
+
+.settings-dropdown-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.settings-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #e53935;
+}
+
+.settings-close {
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: #e53935;
+    cursor: pointer;
+}
+
+/* Settings rows */
+.settings-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    font-size: 14px;
+}
+
+/* SETTINGS SWITCHES */
+.settings-switch {
+    position: relative;
+    width: 34px;
+    height: 18px;
+}
+
+    .settings-switch input {
+        display: none;
+    }
+
+    .settings-switch .settings-slider {
+        position: absolute;
+        inset: 0;
+        background: #fff;
+        border-radius: 20px;
+        border: 2px solid #e53935;
+        cursor: pointer;
+        transition: 0.25s;
+    }
+
+        .settings-switch .settings-slider::before {
+            content: "";
+            width: 14px;
+            height: 14px;
+            background: #e53935;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 1px;
+            transform: translateY(-50%);
+            transition: 0.25s;
+        }
+
+    /* ON state */
+    .settings-switch input:checked + .settings-slider {
+        background: #e53935;
+    }
+
+        .settings-switch input:checked + .settings-slider::before {
+            transform: translate(16px, -50%);
+            background: #fff;
+        }
+
+
+
+
+/* ----------------------- */
+/* LEFT SIDEBAR            */
+/* ----------------------- */
+
+.left-sidebar {
+    background: #fff;
+    border: 2px solid #e53935;
+    border-radius: 22px;
+    padding: 25px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    height: 600px;
+}
+
+.sidebar-title {
+    text-align: center;
+    font-weight: 600;
+    font-size: 17px;
+    color: #e53935;
+}
+
+.search-wrapper {
+    width: 100%;
+    position: relative;
+}
+
+.search-input {
+    width: 100%;
+    padding: 10px 14px;
+    padding-right: 36px;
+    background: #fafafa;
+    border: 1px solid #ddd;
+    border-radius: 14px;
+    box-sizing: border-box;
+}
+
+.search-icon {
+    position: absolute;
+    right: 12px;
+    top: 9px;
+    font-size: 18px;
+    color: #e53935;
+    cursor: pointer;
+}
+
+.class-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-height: 220px;
+    overflow-y: auto;
+}
+
+    .class-list::-webkit-scrollbar {
+        display: none;
+    }
+
+.class-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.class-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.class-color {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+}
+
+.class-count {
+    background: white;
+    border: 2px solid #e53935;
+    color: #e53935;
+    padding: 3px 10px;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+.add-class-btn {
+    background: #e53935;
+    color: white;
+    padding: 10px 0;
+    border-radius: 20px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.options-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.option-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+    .option-row input[type="checkbox"] {
+        transform: scale(1.2);
+        cursor: pointer;
+    }
+
+.label-content {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 270px 1fr 270px;
+    gap: 30px;
+    padding-top: 25px;
+    padding-bottom: 25px;
+    padding-left: 20px;
+    padding-right: 20px; /* FIXED */
+}
+
+
+* {
+    box-sizing: border-box;
+}
+
+
+/* ----------------------- */
+/* RIGHT SIDEBAR           */
+/* ----------------------- */
+
+.right-sidebar {
+    background: #fff;
+    border: 2px solid #e53935;
+    border-radius: 22px;
+    padding: 25px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    height: 600px;
+}
+
+.property-title {
+    color: #e53935;
+    text-align: center;
+    font-weight: 600;
+    font-size: 17px;
+}
+
+/* ------------------------------ */
+/* FINAL Coordinates + Size Layout */
+/* ------------------------------ */
+
+.coord-row {
+    display: flex;
+    align-items: center;
+    gap: 20px; /* X–Y spacing */
+}
+
+.coord-pair {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #e53935;
+    font-weight: 600;
+}
+
+    .coord-pair input,
+    .coord-row input {
+        width: 60px;
+        padding: 5px;
+        border-radius: 6px;
+        border: 1px solid #ddd;
+    }
+
+.coord-row span {
+    color: #e53935;
+    font-weight: 600;
+    margin-right: 4px;
+}
+
+/* --------------------------- */
+/* ACTION BUTTONS              */
+/* --------------------------- */
+
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+
+
+.action-btn {
+    padding: 10px;
+    border: 2px solid #e53935 !important;
+    border-radius: 12px;
+    background: white !important;
+    color: #e53935 !important;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+}
+
+    .action-btn.delete {
+        background: #e53935 !important;
+        color: white !important;
+    }
+
+
+
+/* ----------------------- */
+/* FRAME COUNTER           */
+/* ----------------------- */
+.frame-counter {
+    text-align: center;
+    font-size: 15px;
+    color: #333;
+    margin: 8px 0 5px 0;
+}
+
+
+/* FRAME COUNTER */
+.frame-counter {
+    text-align: center;
+    margin: 10px 0 5px 0;
+    font-size: 15px;
+    color: #333;
+}
+
+/* FRAME STRIP */
+.frame-strip {
+    height: 110px;
+    background: #f3c9c9;
+    display: flex;
+    align-items: center;
+    padding: 0 25px; /* spacing from edges */
+    gap: 25px; /* space between nav buttons and thumbnails */
+}
+
+/* PREV & NEXT BUTTONS */
+.strip-nav-btn {
+    background: none;
+    border: none;
+    font-size: 16px;
+    color: #993333;
+    cursor: pointer;
+    padding: 0 10px;
+}
+
+/* THUMBNAIL ROW */
+.frame-thumbnails {
+    flex: 1; /* THIS is what centers the thumbnails */
+    display: flex;
+    gap: 16px; /* spacing BETWEEN thumbnails */
+    overflow-x: auto;
+    padding: 10px 0; /* vertical padding so they aren’t squeezed */
+}
+
+    /* Remove scrollbars */
+    .frame-thumbnails::-webkit-scrollbar {
+        height: 0;
+    }
+
+/* EACH THUMB */
+.thumb {
+    width: 80px; /* was 90 */
+    height: 60px; /* was 65 */
+    background: white;
+    border-radius: 10px;
+    flex-shrink: 0;
+    overflow: hidden;
+    border: 2px solid transparent;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: 0.15s ease;
+}
+
+    /* ACTIVE THUMB */
+    .thumb.active {
+        border-color: #e57373;
+        background: #ffecec;
+    }
+
+    /* IMAGE INSIDE THUMB */
+    .thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+
+.search-input {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box; /* <-- IMPORTANT FIX */
+}
+
+.search-wrapper {
+    width: 100%;
+    overflow: hidden; /* prevents visual overflow */
+}
+
+.class-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+    max-height: 220px; /* fits ~5 items */
+    overflow-y: auto; /* scrollable */
+    padding-right: 5px;
+}
+
+    /* Hide scrollbar — Chrome, Edge, Safari */
+    .class-list::-webkit-scrollbar {
+        display: none;
+    }
+
+/* Hide scrollbar — Firefox */
+.class-list {
+    scrollbar-width: none;
+}
+
+.option-row {
+    display: flex;
+    justify-content: space-between; /* pushes text left, checkbox right */
+    align-items: center;
+    font-size: 14px;
+    color: #333;
+}
+
+    .option-row input[type="checkbox"] {
+        transform: scale(1.2); /* make checkbox nicer */
+        cursor: pointer;
+    }
+
+/* -------------------------- */
+/* SMALL RED TOGGLE SWITCH   */
+/* -------------------------- */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 34px;
+    height: 18px;
+}
+
+    /* Hide default checkbox */
+    .toggle-switch input {
+        display: none;
+    }
+
+/* Background track */
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #ffffff; /* white OFF background */
+    border: 2px solid #e53935; /* red border ALWAYS */
+    border-radius: 20px;
+    transition: 0.25s ease;
+}
+
+    .slider::before {
+        content: "";
+        position: absolute;
+        width: 14px;
+        height: 14px;
+        left: 1px;
+        top: 50%;
+        transform: translateY(-50%); /* <-- centers perfectly */
+
+        background: #e53935;
+        border-radius: 50%;
+        transition: 0.25s ease;
+    }
+
+
+/* -------------------------- */
+/* ON STATE                   */
+/* -------------------------- */
+
+/* Track turns red */
+.toggle-switch input:checked + .slider {
+    background: #e53935;
+    border-color: #e53935;
+}
+
+    .toggle-switch input:checked + .slider::before {
+        transform: translate(16px, -50%); /* move right but keep centered */
+        background: #ffffff;
+    }
+
+
+
+/* Red themed checkbox */
+.options-section input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #e53935;
+    border-radius: 4px;
+    appearance: none; /* remove default style */
+    cursor: pointer;
+    background: white;
+    margin-left: 6px;
+    position: relative;
+}
+
+    /* Checkmark when selected */
+    .options-section input[type="checkbox"]:checked {
+        background: #e53935;
+        border-color: #e53935;
+    }
+
+        /* White ✓ icon */
+        .options-section input[type="checkbox"]:checked::after {
+            content: "✔";
+            font-size: 10px;
+            color: white;
+            position: absolute;
+            left: 2px;
+            top: -1px;
+        }
+
+/* Row like: Coordinates:  X [ ]   Y [ ] */
+.property-row {
+    display: flex;
+    flex-direction: column; /* stack label on top */
+    gap: 6px;
+    margin-bottom: 18px;
+}
+
+/* "Coordinates:" / "Size:" text */
+.prop-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #e53935;
+}
+
+.prop-fields {
+    display: flex;
+    flex-wrap: wrap; /* allow wrapping inside box */
+    gap: 14px;
+}
+
+.coord-field {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.coord-label {
+    color: #e53935;
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.coord-field input {
+    width: 60px;
+    padding: 5px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 13px;
+}
+
+/* ACTIONS TITLE */
+.actions-title {
+    text-align: center;
+    color: #e53935;
+    font-weight: 600;
+    margin-bottom: 10px;
+    margin-top: 15px;
+    font-size: 15px;
+}
+
+/* LIST WRAPPER */
+.actions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* SMALL BUTTON STYLE (Figma-like) */
+.action-btn.small {
+    padding: px 0;
+    width: 100%;
+    border-radius: 20px;
+    border: 2px solid #e53935;
+    background: #ffffff;
+    color: #e53935;
+    font-weight: 600;
+    font-size: 10px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+}
+
+    /* DELETE BUTTON */
+    .action-btn.small.delete {
+        background: #e53935;
+        color: white;
+        border-color: #e53935;
+    }
+
+/* ICON */
+.action-icon {
+    font-size: 14px;
+    display: inline-block;
+}
+
+/* ----------------------- */
+/* CENTER CANVAS           */
+/* ----------------------- */
+
+.canvas-wrapper {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+
+/* MAIN IMAGE AREA (TOP PART of the frame) */
+.image-canvas {
+    background: #ffffff;
+    border: 2px solid #e53935;
+    border-bottom: none; /* REMOVE bottom so nav connects cleanly */
+    border-radius: 20px 20px 0 0; /* ONLY top corners */
+    width: calc(100% - 20px); /* fits inside grid padding */
+    margin: 0 auto;
+    height: 600px; /* your total height */
+    padding: 20px; /* inner spacing for image */
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+
+/* IMAGE INSIDE */
+.label-image {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+
+/* IMAGE WRAPPER (keeps image centered) */
+.image-wrapper {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+
+/* BOTTOM NAVIGATION BAR */
+.image-nav {
+    width: calc(100% - 20px); /* Align with image-canvas width */
+    margin: 0 auto;
+    height: 60px;
+    background: #fce6e6;
+    border: 2px solid #e53935;
+    border-top: none; /* connects smoothly to image-canvas */
+    border-radius: 0 0 20px 20px; /* ONLY bottom corners */
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 30px;
+}
+
+
+/* NAV BUTTONS */
+.nav-btn {
+    background: none;
+    border: none;
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+    .nav-btn:hover {
+        color: #e53935;
+    }
+
+.arrow-left {
+    margin-right: 6px; /* space between arrow + text */
+    display: inline-block;
+}
+
+.arrow-right {
+    margin-left: 6px;
+    display: inline-block;
+}
+
+.frame-strip {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+}

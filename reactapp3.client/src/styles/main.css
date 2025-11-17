@@ -89,25 +89,57 @@ body {
         opacity: 0.85;
     }
 
+.header-buttons-column {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 14px;
+    margin-right: 10px;
+}
+
+
 .settings-btn {
-    color: #e53935;
-    font-size: 44px;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 32px;
+    cursor: pointer;
+    transition: transform 0.2s ease, opacity 0.2s ease;
 }
 
     .settings-btn:hover {
-        transform: rotate(25deg) scale(1.05);
-        opacity: 0.9;
+        transform: scale(1.1);
+        opacity: 0.8;
     }
-
-/* ---------------------- */
-/* SETTINGS ICON BELOW HEADER */
-/* ---------------------- */
-.settings-container {
+/* Container that aligns button to the right */
+.filter-container {
     display: flex;
     justify-content: flex-end;
-    padding: 12px 40px 0 40px;
-    background: white;
+    padding: 12px 25px;
 }
+
+/* FILTER box button */
+.filter-box {
+    padding: 8px 20px;
+    border: 2px solid #e53935;
+    border-radius: 6px;
+    background: white;
+    color: #e53935;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+    .filter-box:hover {
+        background: #e53935;
+        color: white;
+    }
+
+
+
+
 
 /* ---------------------- */
 /* PAGE LAYOUT            */
@@ -598,22 +630,27 @@ body {
 /* DONE BUTTON */
 /* ---------------------- */
 .modal-done {
+    display: block; /* makes it take full width rules */
+    width: 60%; /* size like your Figma */
+    margin: 25px auto 0 auto; /* centers button */
     background: #e53935;
     color: white;
     border: none;
-    border-radius: 8px;
-    padding: 12px 26px;
-    font-size: 16px;
+    border-radius: 12px; /* bigger curve like Figma */
+    padding: 16px 0; /* taller button */
+    font-size: 20px; /* larger text */
     font-weight: 600;
-    float: right;
     cursor: pointer;
-    transition: background 0.3s ease, transform 0.2s;
+    text-align: center;
+    transition: background 0.3s ease, transform 0.2s ease;
 }
 
     .modal-done:hover {
         background: #c62828;
         transform: translateY(-2px);
     }
+
+
 
 /* ---------------------- */
 /* GLOBAL BUTTON FOCUS FIX */

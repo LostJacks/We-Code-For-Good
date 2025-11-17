@@ -8,7 +8,6 @@ export default function NewProjectModal({ isOpen, onClose, onCreated }) {
     const [description, setDescription] = useState("");
     const [labels, setLabels] = useState([]);
     const [newLabel, setNewLabel] = useState("");
-    const [multiUser, setMultiUser] = useState(false);
     const [files, setFiles] = useState([]);
     const [folderFiles, setFolderFiles] = useState([]);
     const [folderError, setFolderError] = useState("");
@@ -21,7 +20,7 @@ export default function NewProjectModal({ isOpen, onClose, onCreated }) {
 
     if (!isOpen) return null;
 
-    // ✅ Add label (prevent duplicates)
+    // ✅ Add label (no duplicates)
     const addLabel = () => {
         const trimmed = newLabel.trim();
         if (trimmed && !labels.includes(trimmed)) {
@@ -36,6 +35,7 @@ export default function NewProjectModal({ isOpen, onClose, onCreated }) {
         const selectedFiles = Array.from(e.target.files);
         const totalSize = selectedFiles.reduce((sum, f) => sum + f.size, 0);
         const maxSize = 5 * 1024 * 1024 * 1024; // 5 GB
+
         if (totalSize > maxSize) {
             setFolderFiles([]);
             setFolderError("⚠️ Folder exceeds 5 GB total limit.");
@@ -58,7 +58,7 @@ export default function NewProjectModal({ isOpen, onClose, onCreated }) {
             const newProject = {
                 Title: projectName,
                 Description: description,
-                Labels: labels.map((label) => ({ LabelName: label })), // 👈 important
+                labels: labels.map((label) => ({ LabelName: label })),
             };
 
             const createRes = await fetch(`${API}/api/projects`, {
@@ -90,7 +90,6 @@ export default function NewProjectModal({ isOpen, onClose, onCreated }) {
             setFiles([]);
             setFolderFiles([]);
             setNewLabel("");
-            setMultiUser(false);
             onClose();
             onCreated?.();
         } catch (err) {
@@ -212,24 +211,21 @@ export default function NewProjectModal({ isOpen, onClose, onCreated }) {
                         placeholder="Add labels for this project"
                         value={newLabel}
                         onChange={(e) => setNewLabel(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && addLabel()} // enter key support
+                        onKeyDown={(e) => e.key === "Enter" && addLabel()}
                     />
                     <button onClick={addLabel}>+</button>
                 </div>
 
-                {/* === Multi-user Toggle === */}
-                <div className="multiuser-toggle">
-                    <input
-                        type="checkbox"
-                        checked={multiUser}
-                        onChange={() => setMultiUser(!multiUser)}
-                    />
-                    <span>Enable multi-user mode</span>
+                {/* === CENTERED DONE BUTTON (CSS next step) === */}
+                <div className="modal-done-container">
+                    <button
+                        className="modal-done"
+                        onClick={handleSubmit}
+                        disabled={loading}
+                    >
+                        {loading ? "Uploading..." : "Done"}
+                    </button>
                 </div>
-
-                <button className="modal-done" onClick={handleSubmit} disabled={loading}>
-                    {loading ? "Uploading..." : "Done"}
-                </button>
             </div>
         </div>
     );
