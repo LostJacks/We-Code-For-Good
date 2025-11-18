@@ -1,22 +1,52 @@
-import React from "react";
+import React, { useState } from "react";
+import EmailInput from "../components/EmailInput";
+import PasswordInput from "../components/PasswordInput";
+import LoginButton from "../components/LoginButton";
+import { useNavigate } from "react-router-dom";
 import "../styles/main.css";
 import "../styles/login.css";
 
+
+
 export default function LoginPage() {
+    const [showPassword, setShowPassword] = useState(false);
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const togglePassword = () => setShowPassword((v) => !v);
+    const navigate = useNavigate();
+
+    const handleLogin = (e) => {
+        e.preventDefault();
+    
+    };
+
     return (
         <div className="login-page">
-            <div className="auth-box">
-                <div className="welcome-back" >Welcome Back!</div>
-                <div className="no-account">Don't have an account?</div>
-                <div className="register">Register</div>
-                <div className="email-box">E-mail<div className="email-text">E-mail</div>
-                    <div className="email-icon"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="22" viewBox="0 0 28 22" fill="none">
-                        <path d="M2.49056 21.5833C1.78088 21.5833 1.18837 21.3457 0.713021 20.8703C0.237674 20.395 0 19.8025 0 19.0928V2.49056C0 1.78088 0.237674 1.18837 0.713021 0.713021C1.18837 0.237674 1.78088 0 2.49056 0H25.2594C25.9691 0 26.5616 0.237674 27.037 0.713021C27.5123 1.18837 27.75 1.78088 27.75 2.49056V19.0928C27.75 19.8025 27.5123 20.395 27.037 20.8703C26.5616 21.3457 25.9691 21.5833 25.2594 21.5833H2.49056ZM13.875 10.9697L1.54167 2.90527V19.0928C1.54167 19.3695 1.63057 19.5969 1.80838 19.775C1.98644 19.9528 2.21383 20.0417 2.49056 20.0417H25.2594C25.5362 20.0417 25.7636 19.9528 25.9416 19.775C26.1194 19.5969 26.2083 19.3695 26.2083 19.0928V2.90527L13.875 10.9697ZM13.875 9.25L25.7339 1.54167H2.01611L13.875 9.25ZM1.54167 2.90527V1.54167V19.0928C1.54167 19.3695 1.63057 19.5969 1.80838 19.775C1.98644 19.9528 2.21383 20.0417 2.49056 20.0417H1.54167V2.90527Z" fill="#E74026" />
-                    </svg></div>
-                    <div className="email-input"></div>
+            <img src="/assets/background.jpg" alt="Background" className="background-image" />
+            <div className="page-wrapper">
+                <img src="/assets/Rope.png" alt="Rope" className="Rope" />
+                <div className="auth-box" style={{ position: "relative" }}>
+                    <div className="User-login" >
+                        <div className="welcome-back" >Welcome Back!</div>
+                        <div className="no-account">Don't have an account?</div>
+                        <button className="register" title="register" onClick={() => navigate("/register")}>Register</button>
+                        <EmailInput value={email} onChange={e => setEmail(e.target.value)} />
+                        <PasswordInput value={password} onChange={e => setPassword(e.target.value)} showPassword={showPassword} togglePassword={togglePassword} />
+                        <LoginButton onClick={handleLogin} />
+                    </div>
+                    <div className="circle"></div>
                 </div>
-                <div className="password-box">Password<div className="password-text">Password</div></div>
             </div>
+            <div className="diagram">
+                <div className="box box-labeling">
+                    <div className="tab">Labeling</div>
+                </div>
+                <div className="box box-tool">
+                    <div className="tab">Tool</div>
+                </div>
+            </div>
+            <img src="/assets/Rope.png" alt="Rope2" className="Rope2" />
+            <img src="/assets/LabelCard.png" alt="LabelCard" className="LabelCard" />
         </div>
     );
-}   
+}
