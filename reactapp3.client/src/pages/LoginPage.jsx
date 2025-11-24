@@ -6,18 +6,42 @@ import { useNavigate } from "react-router-dom";
 import "../styles/main.css";
 import "../styles/login.css";
 
-
+const API_BASE = import.meta.env.VITE_API_URL || "https://localhost:7166";
 
 export default function LoginPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [error, setError] = useState("");
     const togglePassword = () => setShowPassword((v) => !v);
     const navigate = useNavigate();
 
-    const handleLogin = (e) => {
+    const handleLogin = async (e) => {
         e.preventDefault();
-    
+        setError("");
+        try {
+            const payload = {
+                email,
+                password
+            };
+            const res = await fetch(`${API_BASE}/api/auth/login`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            });
+            if (!res.ok) {
+                const txt = await res.text();
+                throw new Error(txt || "Login failed");
+            }
+            const data = await res.json();
+            localStorage.setItem("accessToken", data.accessToken);
+            localStorage.setItem("refreshToken", data.refreshToken);
+            
+            navigate("/main");
+        } catch (err) {
+            console.error("Login error:", err);
+            setError(err.message || "Login failed");
+        }
     };
 
     return (
@@ -33,6 +57,7 @@ export default function LoginPage() {
                         <EmailInput value={email} onChange={e => setEmail(e.target.value)} />
                         <PasswordInput value={password} onChange={e => setPassword(e.target.value)} showPassword={showPassword} togglePassword={togglePassword} />
                         <LoginButton onClick={handleLogin} />
+                        {error && <div style={{ color: "red", marginTop: 8 }}>{error}</div>}
                     </div>
                     <div className="circle"></div>
                 </div>

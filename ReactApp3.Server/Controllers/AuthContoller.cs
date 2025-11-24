@@ -41,7 +41,6 @@ public class AuthController : ControllerBase
     {
         var user = new AppUser
         {
-            UserName = request.UserName,
             Email = request.Email
 
 
@@ -76,8 +75,8 @@ public class AuthController : ControllerBase
         {
             return BadRequest(new { message = "invalid access token.'" });
         }
-        var userName = principal.Identity?.Name;
-        var user = await _userManager.FindByNameAsync(userName);
+        var email = principal.Identity?.Name;
+        var user = await _userManager.FindByEmailAsync(email);
         if (user == null)
         {
             return BadRequest(new { message = "User not found." });
@@ -124,7 +123,8 @@ public class AuthController : ControllerBase
         return Ok(new UserInfo
         {
             Id = int.Parse(user.Id),
-            UserName = user.UserName,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
             Email = user.Email
         });
     }
@@ -133,7 +133,6 @@ public class AuthController : ControllerBase
     {
         var claims = new List<Claim>
         {
-            new Claim(ClaimTypes.Name, user.UserName),
             new Claim(ClaimTypes.NameIdentifier, user.Id)
         };
         var roles = await _userManager.GetRolesAsync(user);
@@ -163,7 +162,8 @@ public class AuthController : ControllerBase
             {
                 Id = int.Parse(user.Id),
                 Email = user.Email,
-                UserName = user.UserName,
+                FirstName = user.FirstName,
+                LastName = user.LastName
             }
         }; }
 
