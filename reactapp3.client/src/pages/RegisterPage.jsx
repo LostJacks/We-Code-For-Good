@@ -27,7 +27,7 @@ export default function RegisterPage() {
     };
 
     return (
-        <div className="login-page">
+        <div className="login-page">    
             <img src="/assets/background.jpg" alt="Background" className="background-image" />
             <div className="page-wrapper">
                 <img src="/assets/Rope.png" alt="Rope" className="Rope" />
