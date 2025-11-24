@@ -1,22 +1,16 @@
 using System;
 using System.Text;
+using LabelingTool.BLL.Interfaces;
 using LabelingTool.BLL.Services;
+using LabelingTool.DAL;
+using LabelingTool.DAL.Interfaces;
+using LabelingTool.DAL.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
-using Model;
+
+
 
 var builder = WebApplication.CreateBuilder(args);
-
-
-builder.Services.AddIdentity<AppUser, IdentityRole<int>>(options =>
-{
-    options.User.RequireUniqueEmail = true;
-    options.Password.RequiredLength = 8;
-    options.Lockout.MaxFailedAccessAttempts = 5;
-})
-.AddEntityFrameworkStores<AppDbContext>()
-.AddDefaultTokenProviders();
 
 builder.Services.AddCors(o => o.AddPolicy("spa", options =>
     options.WithOrigins("http://localhost:5173")
@@ -42,6 +36,16 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddSingleton<Database>(sp =>
+{
+	var config = sp.GetService<IConfiguration>();
+    var connectionString = config.GetConnectionString("ServerDb");
+	return new Database(connectionString!);
+});
+
+builder.Services.AddScoped<IProjectsRepository, ProjectRepository>();
+builder.Services.AddScoped<IProjectsService, ProjectsService>();
+
 builder.Services.AddControllers()
     .AddJsonOptions(o => o.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase);
 
