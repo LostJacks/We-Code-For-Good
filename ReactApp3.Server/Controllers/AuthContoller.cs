@@ -1,188 +1,185 @@
-﻿using System.Security.Claims;
-using System.Security.Cryptography;
-using LabelingTool.BLL.DTOs;
-using LabelingTool.BLL.Services;
+﻿using System;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using Azure.Identity;
-using Microsoft.Identity.Client;
-using Microsoft.AspNetCore.SignalR;
-using Microsoft.Extensions.Configuration.UserSecrets;
+using LabelingTool.BLL.DTOs;
+using LabelingTool.DAL.Interfaces;
+using LabelingTool.BLL.Interfaces;
 using Model;
+using Microsoft.AspNetCore.Authorization;
 
-namespace Smart_Server.Controllers;
-[ApiController]
-[Route("api/[controller]")]
-public class AuthController : ControllerBase
+namespace Smart_Server.Controllers
 {
-    private readonly UserManager<AppUser> _userManager;
-    private readonly ITokenService _tokenService;
-    private readonly SignInManager<AppUser> _signInManager;
-    private readonly AppDbContext _dbContext;
-    private readonly IConfiguration _configuration;
+	[ApiController]
+	[Route("api/[controller]")]
+	public class AuthController : ControllerBase
+	{
+		private readonly IUserRepository _userRepository;
+		private readonly ITokenService _tokenService;
 
-    public AuthController(
-        UserManager<AppUser> userManager,
-        SignInManager<AppUser> signInManager,
-        ITokenService tokenService,
-        AppDbContext dbContext,
-        IConfiguration configuration)
-    {
-        _userManager = userManager;
-        _signInManager = signInManager;
-        _tokenService = tokenService;
-        _dbContext = dbContext;
-        _configuration = configuration;
-    }
-    [HttpPost("register")]
-    public async Task<ActionResult<AuthResponse>> Register(RegisterRequestDTO request)
-    {
-        var user = new AppUser
-        {
-            Email = request.Email
+		public AuthController(IUserRepository userRepository, ITokenService tokenService)
+		{
+			_userRepository = userRepository;
+			_tokenService = tokenService;
+		}
+		[HttpPost("register")]
+		public ActionResult<AuthResponse> Register([FromBody] RegisterRequestDTO request)
+		{
+			if (request == null)
+				return BadRequest("Request body is required.");
+
+			var errors = RegisterValidator.Validate(request);
+			if (errors.Count > 0)
+			{
+				return BadRequest(new { errors });
+			}
+			if (_userRepository.EmailExists(request.Email))
+			{
+				return BadRequest(new
+				{
+					errors = new[] { "Email is already in use." }
+				});
+			}
+
+			// without hahing yet
+			var user = new AppUser
+			{
+				Name = request.UserName,     
+				Email = request.Email,
+				PasswordHash = request.Password // TODO: hash
+			};
+
+			int newId = _userRepository.Create(user);
+			user.Id = newId;
+
+			var accessToken = _tokenService.CreateToken(user);
+			var refreshToken = _tokenService.GenerateRefreshToken();
+			var expiresAt = DateTime.UtcNow.AddMinutes(30);
+
+			_userRepository.SaveRefreshToken(user.Id, refreshToken, expiresAt);
+
+			var response = new AuthResponse
+			{
+				AccessToken = accessToken,
+				RefreshToken = refreshToken,
+				ExpiresAt = expiresAt,
+				User = new UserInfo
+				{
+					Id = user.Id,
+					Email = user.Email,
+					Name = user.Name
+				}
+			};
+
+			return Ok(response);
+		}
+
+		[HttpPost("login")]
+		public ActionResult<AuthResponse> Login([FromBody] LoginRequestDTO request)
+		{
+			if (request == null ||
+				string.IsNullOrWhiteSpace(request.Email) ||
+				string.IsNullOrWhiteSpace(request.Password))
+			{
+				return BadRequest("Email and password are required.");
+			}
+
+			var user = _userRepository.GetByEmail(request.Email);
+			if (user == null)
+			{
+				return Unauthorized("Invalid email or password.");
+			}
+
+			if (user.PasswordHash != request.Password)
+			{
+				return Unauthorized("Invalid email or password.");
+			}
+
+			var accessToken = _tokenService.CreateToken(user);
+			var refreshToken = _tokenService.GenerateRefreshToken();
+			var expiresAt = DateTime.UtcNow.AddMinutes(30);
+
+			_userRepository.SaveRefreshToken(user.Id, refreshToken, expiresAt);
 
 
-        };
-        var result = await _userManager.CreateAsync(user, request.Password);
-        if (!result.Succeeded)
-        {
-            return BadRequest(result.Errors);
-        }
-        return await GenerateAuthResponse(user);
-    }
-    [HttpPost("login")]
-    public async Task<ActionResult<AuthResponse>> Login(LoginRequestDTO request)
-    {
-        var user = await _userManager.FindByNameAsync(request.UserName);
-        if (user == null)
-        {
-            return Unauthorized("Invalid username or password.");
-        }
-        var result = await _signInManager.CheckPasswordSignInAsync(user, request.Password, false);
-        if (!result.Succeeded)
-        {
-            return Unauthorized("Invalid username or password.");
-        }
-        return await GenerateAuthResponse(user);
-    }
-    [HttpPost("refresh-token")]
-    public async Task<ActionResult<AuthResponse>> RefreshToken(RefreshTokenRequest request)
-    {
-        var principal = _tokenService.GetPrincipalFromExpiredToken(request.AccessToken);
-        if (principal == null)
-        {
-            return BadRequest(new { message = "invalid access token.'" });
-        }
-        var email = principal.Identity?.Name;
-        var user = await _userManager.FindByEmailAsync(email);
-        if (user == null)
-        {
-            return BadRequest(new { message = "User not found." });
-        }
-        var storedRefreshToken = await _dbContext.Set<RefreshToken>()
-            .FirstOrDefaultAsync(rt => rt.UserId == user.Id && rt.Token == request.RefreshToken);
-        if (storedRefreshToken == null || storedRefreshToken.ExpiryDate <= DateTime.UtcNow)
-        {
-            return BadRequest(new { message = "Invalid or expired refresh token." });
-        }
-        return await GenerateAuthResponse(user);
-    }
-    [Authorize]
-    [HttpPost("logout")]
-    public async Task<ActionResult> Logout()
-    {
-        var username = User.Identity?.Name;
-        if (username == null)
-        {
-            return BadRequest(new { message = "Invalid user." });
-        }
-        var user = await _userManager.FindByNameAsync(username);
-        if (user == null)
-        {
-            return BadRequest(new { message = "User not found." });
-        }
-        await _signInManager.SignOutAsync();
-        return Ok(new { message = "Logged out successfully." });
-    }
-    [Authorize]
-    [HttpGet("me")]
-    public async Task<ActionResult<UserInfo>> GetCurrentUser()
-    {
-        var username = User.Identity?.Name;
-        if (username == null)
-        {
-            return BadRequest(new { message = "Invalid user." });
-        }
-        var user = await _userManager.FindByNameAsync(username);
-        if (user == null)
-        {
-            return BadRequest(new { message = "User not found." });
-        }
-        return Ok(new UserInfo
-        {
-            Id = int.Parse(user.Id),
-            FirstName = user.FirstName,
-            LastName = user.LastName,
-            Email = user.Email
-        });
-    }
+			var response = new AuthResponse
+			{
+				AccessToken = accessToken,
+				RefreshToken = refreshToken,
+				ExpiresAt = expiresAt,
+				User = new UserInfo
+				{
+					Id = user.Id,
+					Email = user.Email,
+					Name = user.Name
+				}
+			};
 
-    private async Task<AuthResponse> GenerateAuthResponse(AppUser user)
-    {
-        var claims = new List<Claim>
-        {
-            new Claim(ClaimTypes.NameIdentifier, user.Id)
-        };
-        var roles = await _userManager.GetRolesAsync(user);
-        claims.AddRange(roles.Select(roles => new Claim(ClaimTypes.Role, roles))); 
+			return Ok(response);
+		}
+		[HttpPost("refresh")]
+		public ActionResult<AuthResponse> Refresh([FromBody] RefreshTokenRequest request)
+		{
+			if (request == null || string.IsNullOrWhiteSpace(request.RefreshToken))
+				return BadRequest("Refresh token is required.");
 
-        var accessToken = _tokenService.GenerateAccessToken(claims);
-        var refreshToken = _tokenService.GenerateRefreshToken();
+			var user = _userRepository.GetByRefreshToken(request.RefreshToken);
+			if (user == null)
+			{
+				return Unauthorized("Invalid or expired refresh token.");
+			}
 
-        var refreshTokenEntity = new RefreshToken
-        {
-            UserId = user.Id,
-            TokenHash = HashToken(refreshToken),
-            IssuedAt = DateTimeOffset.UtcNow.AddDays(
-                int.Parse(_configuration["Jwt:RefreshTokenValidityInDays"]!)),
-            UserAgent = Request.Headers.UserAgent.ToString(),
-            Ip = HttpContext.Connection.RemoteIpAddress?.ToString()
-        };
-        _dbContext.Set<RefreshToken>().Add(refreshTokenEntity);
-        await _dbContext.SaveChangesAsync();
-        return new AuthResponse
-        {
-            AccessToken = accessToken,
-            RefreshToken = refreshToken,
-            ExpiresAt = DateTime.UtcNow.AddMinutes(
-                int.Parse(_configuration["Jwt:AccessTokenValidityInMinutes"]!)),
-            User = new UserInfo
-            {
-                Id = int.Parse(user.Id),
-                Email = user.Email,
-                FirstName = user.FirstName,
-                LastName = user.LastName
-            }
-        }; }
+			var newAccessToken = _tokenService.CreateToken(user);
+			var newRefreshToken = _tokenService.GenerateRefreshToken();
+			var newExpiresAt = DateTime.UtcNow.AddMinutes(30);
 
-        private static string HashToken(string token)
-    {
-        using var sha256 = SHA256.Create();
-        var bytes = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(token));
-        return Convert.ToBase64String(bytes);
-    }
-     
-}
+			_userRepository.SaveRefreshToken(user.Id, newRefreshToken, newExpiresAt);
 
-internal class RefreshToken
-{
-    public string UserId { get; set; }
-    public string TokenHash { get; set; }
-    public DateTimeOffset IssuedAt { get; set; }
-    public string UserAgent { get; set; }
-    public string Ip { get; set; }
-    public string Token { get; internal set; }
-    public DateTime ExpiryDate { get; internal set; }
+			var response = new AuthResponse
+			{
+				AccessToken = newAccessToken,
+				RefreshToken = newRefreshToken,
+				ExpiresAt = newExpiresAt,
+				User = new UserInfo
+				{
+					Id = user.Id,
+					Email = user.Email,
+					Name = user.Name
+				}
+			};
+
+			return Ok(response);
+		}
+		[Authorize]
+		[HttpGet("me")]
+		public ActionResult<UserInfo> Me()
+		{
+			try
+			{
+				//here we are getting user id from token xd
+				var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+
+				if (userIdClaim == null)
+					return Unauthorized("Missing user id claim. Token invalid.");
+
+				int userId = int.Parse(userIdClaim.Value);
+
+				var user = _userRepository.GetById(userId);
+
+				if (user == null)
+					return Unauthorized("User not found.");
+
+				var response = new UserInfo
+				{
+					Id = user.Id,
+					Email = user.Email,
+					Name = user.Name
+				};
+
+				return Ok(response);
+			}
+			catch (Exception ex)
+			{
+				return StatusCode(500, "Error in /auth/me: " + ex.Message);
+			}
+		}
+	}
 }
