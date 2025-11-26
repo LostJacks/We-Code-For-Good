@@ -14,12 +14,15 @@ namespace Smart_Server.Controllers
 	{
 		private readonly IUserRepository _userRepository;
 		private readonly ITokenService _tokenService;
+		private readonly IUserService _userService;
 
-		public AuthController(IUserRepository userRepository, ITokenService tokenService)
+		public AuthController(IUserRepository userRepository, ITokenService tokenService, IUserService userService)
 		{
 			_userRepository = userRepository;
 			_tokenService = tokenService;
+			_userService = userService;
 		}
+
 		[HttpPost("register")]
 		public ActionResult<AuthResponse> Register([FromBody] registerRequest request)
 		{
@@ -28,27 +31,20 @@ namespace Smart_Server.Controllers
 
 			var errors = RegisterValidator.Validate(request);
 			if (errors.Count > 0)
-			{
 				return BadRequest(new { errors });
-			}
-			if (_userRepository.EmailExists(request.Email))
-			{
-				return BadRequest(new
-				{
-					errors = new[] { "Email is already in use." }
-				});
-			}
 
-			// without hahing yet
+			if (_userRepository.EmailExists(request.Email))
+				return BadRequest(new { errors = new[] { "Email is already in use." } });
+
 			var user = new AppUser
 			{
 				FirstName = request.FirstName,
 				LastName = request.LastName,
-                Email = request.Email,
-				PasswordHash = request.Password // TODO: hash
+				Email = request.Email,
+				UserName = request.Email
 			};
 
-			int newId = _userRepository.Create(user);
+			int newId = _userService.Register(user, request.Password);
 			user.Id = newId;
 
 			var accessToken = _tokenService.CreateToken(user);
@@ -90,7 +86,7 @@ namespace Smart_Server.Controllers
 				return Unauthorized("Invalid email or password.");
 			}
 
-			if (user.PasswordHash != request.Password)
+			if (!_userService.VerifyPassword(user, request.Password))
 			{
 				return Unauthorized("Invalid email or password.");
 			}
@@ -100,7 +96,6 @@ namespace Smart_Server.Controllers
 			var expiresAt = DateTime.UtcNow.AddMinutes(30);
 
 			_userRepository.SaveRefreshToken(user.Id, refreshToken, expiresAt);
-
 
 			var response = new AuthResponse
 			{
@@ -118,6 +113,7 @@ namespace Smart_Server.Controllers
 
 			return Ok(response);
 		}
+
 		[HttpPost("refresh")]
 		public ActionResult<AuthResponse> Refresh([FromBody] RefreshTokenRequest request)
 		{
@@ -152,13 +148,13 @@ namespace Smart_Server.Controllers
 
 			return Ok(response);
 		}
+
 		[Authorize]
 		[HttpGet("me")]
 		public ActionResult<UserInfo> Me()
 		{
 			try
 			{
-				//here we are getting user id from token xd
 				var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
 
 				if (userIdClaim == null)

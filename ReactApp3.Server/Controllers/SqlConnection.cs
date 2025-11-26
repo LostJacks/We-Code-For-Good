@@ -1,12 +1,12 @@
 ﻿namespace Smart_Server.Controllers
 {
-    internal class SqlConnection
+    internal class LocalConnectionInfo
     {
-        private string connStr;
+        private string _connStr;
 
-        public SqlConnection(string connStr)
+        public LocalConnectionInfo(string connStr)
         {
-            this.connStr = connStr;
+            _connStr = connStr;
         }
     }
 }
