@@ -70,7 +70,7 @@ namespace LabelingTool.DAL.BBRepositories
             return boundingBoxes;
         }
 
-        public async Task<BoundingBoxDto> GetByIdAsync(int boundingBoxId)
+        public async Task<BoundingBoxDto?> GetByIdAsync(int boundingBoxId)
         {
             using (var connection = new SqlConnection(_connectionString))
             {
@@ -133,8 +133,13 @@ namespace LabelingTool.DAL.BBRepositories
                 command.Parameters.AddWithValue("@X2", request.X2);
                 command.Parameters.AddWithValue("@Y2", request.Y2);
 
-                var newId = (int)await command.ExecuteScalarAsync();
+                var result = await command.ExecuteScalarAsync();
+                if (result == null)
+                    throw new Exception("Failed to insert bounding box - database returned null");
+
+                var newId = (int)result;
                 return newId;
+
             }
         }
 

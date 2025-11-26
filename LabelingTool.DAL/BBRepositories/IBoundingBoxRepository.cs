@@ -10,7 +10,7 @@ namespace LabelingTool.DAL.BBRepositories
     public interface IBoundingBoxRepository
     {
         Task<List<BoundingBoxDto>> GetByMediaIdAsync(int mediaId);
-        Task<BoundingBoxDto> GetByIdAsync(int boundingBoxId);
+        Task<BoundingBoxDto?> GetByIdAsync(int boundingBoxId);
         Task<int> CreateAsync(CreateBoundingBoxRequest request);
         Task UpdateAsync(UpdateBoundingBoxRequest request);
         Task DeleteAsync(int boundingBoxId);
