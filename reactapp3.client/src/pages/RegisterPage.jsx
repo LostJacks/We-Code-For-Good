@@ -19,12 +19,13 @@ export default function RegisterPage() {
     const [confirmPassword, setConfirmPassword] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
-    const togglePassword = () => setShowPassword((v) => !v);
-
+    const [error, setError] = useState("");
     const navigate = useNavigate();
+    const togglePassword = () => setShowPassword((v) => !v);
 
     const handleRegister = async (e) => {
         e.preventDefault();
+        setError("");
         try {
             
             const payload = {
@@ -40,8 +41,10 @@ export default function RegisterPage() {
                 body: JSON.stringify(payload),
             });
             if (!res.ok) {
-                const txt = await res.text();
-                throw new Error(txt || "Register failed");
+                let txt;
+                try { txt = await res.json();} catch { txt = await res.text(); }
+                const msg = txt?.errors ? txt.errors.join (",") : txt || "Register failed";
+                throw new Error(msg);
             }
             const data = await res.json();
             localStorage.setItem("accessToken", data.accessToken);
@@ -49,7 +52,7 @@ export default function RegisterPage() {
             navigate("/main");
         } catch (err) {
             console.error("Register error:", err);
-            alert(err.message || "Register failed");
+         setError(err.message || "Register failed");
         }
     };
 
@@ -70,6 +73,11 @@ export default function RegisterPage() {
                         <PasswordInput value={password} onChange={e => setPassword(e.target.value)} showPassword={showPassword} togglePassword={togglePassword} />
                         <ConfirmPassword value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
                         <RegisterButton onClick={handleRegister} />
+                        {error && (
+                            <div className="error-message" style={{ color: "red", marginTop: "10px" }}>
+                                {error}
+                            </div>
+                        )}
                     </div>
                     <div className="circle"></div>
                 </div>
