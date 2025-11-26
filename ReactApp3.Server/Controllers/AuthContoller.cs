@@ -21,7 +21,7 @@ namespace Smart_Server.Controllers
 			_tokenService = tokenService;
 		}
 		[HttpPost("register")]
-		public ActionResult<AuthResponse> Register([FromBody] RegisterRequestDTO request)
+		public ActionResult<AuthResponse> Register([FromBody] registerRequest request)
 		{
 			if (request == null)
 				return BadRequest("Request body is required.");
@@ -42,8 +42,9 @@ namespace Smart_Server.Controllers
 			// without hahing yet
 			var user = new AppUser
 			{
-				Name = request.UserName,     
-				Email = request.Email,
+				FirstName = request.FirstName,
+				LastName = request.LastName,
+                Email = request.Email,
 				PasswordHash = request.Password // TODO: hash
 			};
 
@@ -65,7 +66,8 @@ namespace Smart_Server.Controllers
 				{
 					Id = user.Id,
 					Email = user.Email,
-					Name = user.Name
+					FirstName = user.FirstName,
+					LastName = user.LastName,
 				}
 			};
 
@@ -109,7 +111,8 @@ namespace Smart_Server.Controllers
 				{
 					Id = user.Id,
 					Email = user.Email,
-					Name = user.Name
+					FirstName = user.FirstName,
+					LastName = user.LastName
 				}
 			};
 
@@ -142,7 +145,8 @@ namespace Smart_Server.Controllers
 				{
 					Id = user.Id,
 					Email = user.Email,
-					Name = user.Name
+					FirstName = user.FirstName,
+					LastName = user.LastName
 				}
 			};
 
@@ -171,7 +175,8 @@ namespace Smart_Server.Controllers
 				{
 					Id = user.Id,
 					Email = user.Email,
-					Name = user.Name
+					FirstName = user.FirstName,
+					LastName = user.LastName
 				};
 
 				return Ok(response);

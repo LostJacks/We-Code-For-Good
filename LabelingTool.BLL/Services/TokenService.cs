@@ -26,7 +26,8 @@ namespace LabelingTool.BLL.Services
 			{
 				new Claim("userId", user.Id.ToString()),
 				new Claim("email", user.Email),
-				new Claim("name", user.Name)
+				new Claim("firstName", user.FirstName),
+				new Claim("lastName", user.LastName)
 			};
 
 			return GenerateAccessToken(claims);

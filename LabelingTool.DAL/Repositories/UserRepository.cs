@@ -38,7 +38,7 @@ namespace LabelingTool.DAL.Repositories
 					return new AppUser
 					{
 						Id = reader.GetInt32(0),
-						Name = reader.GetString(1),
+						UserName = reader.GetString(1),
 						Email = reader.GetString(2),
 						PasswordHash = reader.GetString(3)
 					};
@@ -61,7 +61,7 @@ namespace LabelingTool.DAL.Repositories
 			try
 			{
 				using var connection = _database.CreateOpenConnection();
-				var sql = @"SELECT user_id, name, email, password 
+				var sql = @"SELECT user_id, username, email, password 
                             FROM Users
                             WHERE email = @Email";
 
@@ -75,7 +75,7 @@ namespace LabelingTool.DAL.Repositories
 					return new AppUser
 					{
 						Id = reader.GetInt32(0),
-						Name = reader.GetString(1),
+						UserName = reader.GetString(1),
 						Email = reader.GetString(2),
 						PasswordHash = reader.GetString(3)
 					};
@@ -129,7 +129,7 @@ namespace LabelingTool.DAL.Repositories
                     VALUES (@Name, @Email, @Password)";
 
 				using var command = new SqlCommand(sql, connection);
-				command.Parameters.AddWithValue("@Name", user.Name);
+				command.Parameters.AddWithValue("@Name", user.UserName);
 				command.Parameters.AddWithValue("@Email", user.Email);
 				command.Parameters.AddWithValue("@Password", user.PasswordHash);
 
@@ -197,7 +197,7 @@ namespace LabelingTool.DAL.Repositories
 					return new AppUser
 					{
 						Id = reader.GetInt32(0),
-						Name = reader.GetString(1),
+						UserName = reader.GetString(1),
 						Email = reader.GetString(2),
 						PasswordHash = reader.GetString(3)
 					};
