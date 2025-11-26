@@ -1,53 +1,85 @@
-﻿import React, { useRef } from "react";
+﻿import React, { useState } from "react";
 
-export default function FrameStrip({ currentFrame = 12, totalFrames = 180 }) {
+export default function FrameStrip({
+    currentFrame: initialFrame = 12,
+    totalFrames = 180,
+}) {
+    const [startIndex, setStartIndex] = useState(0);
+    const [currentFrame, setCurrentFrame] = useState(initialFrame);
+    const FRAMES_VISIBLE = 10;
 
-    const thumbsRef = useRef(null);
-
+    // Move by 10 frames per click
     const scrollLeft = () => {
-        thumbsRef.current.scrollBy({
-            left: -300,   // adjust scroll amount
-            behavior: "smooth"
-        });
+        setStartIndex((prev) => Math.max(prev - FRAMES_VISIBLE, 0));
     };
 
     const scrollRight = () => {
-        thumbsRef.current.scrollBy({
-            left: 300,    // adjust scroll amount
-            behavior: "smooth"
-        });
+        setStartIndex((prev) =>
+            Math.min(prev + FRAMES_VISIBLE, totalFrames - FRAMES_VISIBLE)
+        );
+    };
+
+    // Frames currently visible
+    const visibleFrames = Array.from(
+        { length: FRAMES_VISIBLE },
+        (_, i) => startIndex + i
+    );
+
+    // When user clicks on a frame
+    const handleFrameClick = (frameNumber) => {
+        setCurrentFrame(frameNumber);
     };
 
     return (
-        <>
+        <div className="frame-strip-section">
+            {/* Frame Counter */}
             <div className="frame-counter">
                 Frame: {currentFrame}/{totalFrames}
             </div>
 
+            {/* Frame Strip */}
             <div className="frame-strip">
-
-                {/* Prev Button */}
-                <button className="strip-nav-btn" onClick={scrollLeft}>
+                <button
+                    className="strip-nav-btn"
+                    onClick={scrollLeft}
+                    disabled={startIndex === 0}
+                >
                     ◀ Prev
                 </button>
 
-                {/* Thumbnails */}
-                <div className="frame-thumbnails" ref={thumbsRef}>
-                    {Array.from({ length: 200 }).map((_, i) => (
-                        <div
-                            className={`thumb ${i === currentFrame ? "active" : ""}`}
-                            key={i}
-                        >
-                            <img src="/placeholder-thumb.png" alt="thumb" />
-                        </div>
-                    ))}
+                <div className="frame-thumbnails">
+                    {visibleFrames.map((frameIndex) => {
+                        const frameNumber = frameIndex + 1;
+                        return (
+                            <div
+                                key={frameIndex}
+                                className={`thumb ${frameNumber === currentFrame ? "active" : ""
+                                    }`}
+                                onClick={() => handleFrameClick(frameNumber)}
+                                style={{ cursor: "pointer" }}
+                            >
+                                <img
+                                    src="/assets/default-placeholder.png"
+                                    alt={`Frame ${frameNumber}`}
+                                    className={
+                                        frameNumber === currentFrame
+                                            ? "highlighted"
+                                            : ""
+                                    }
+                                />
+                            </div>
+                        );
+                    })}
                 </div>
 
-                {/* Next Button */}
-                <button className="strip-nav-btn" onClick={scrollRight}>
+                <button
+                    className="strip-nav-btn"
+                    onClick={scrollRight}
+                    disabled={startIndex >= totalFrames - FRAMES_VISIBLE}
+                >
                     Next ▶
                 </button>
             </div>
-        </>
+        </div>
     );
 }
