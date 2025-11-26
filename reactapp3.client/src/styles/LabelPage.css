@@ -1,47 +1,59 @@
-﻿
-
-.label-page {
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
+﻿html, body {
+    height: auto;
+    margin: 0;
+    padding: 0;
     background: #fafafa;
+    overflow-x: hidden;
+    overflow-y: auto; /* ✅ full document scrolls */
+    background: #fff;
+    color: #000;
+    color-scheme: light !important;
 }
-
-
-/* FIXED 1920x1080 BASE AREA */
-.app-base {
-    width: 1920px;
-    height: 1080px;
-    overflow: hidden;
-    position: relative;
+input, textarea, select {
+    background: #fff !important;
+    color: #000 !important;
 }
-
-/* SCALE WRAPPER */
-.app-scale-wrapper {
-    width: 100vw;
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    overflow: hidden;
-    transform-origin: top center;
-}
-
 
 .label-page {
-    padding-bottom: 20px; /* adds breathing room above taskbar */
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* allows page to grow naturally */
+    width: 100vw;
+    background: #fafafa;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden; /* keep horizontal scroll hidden */
 }
 
-/* Header container */
+
+/* ✅ HEADER scrolls with the page */
 .label-header {
+    position: relative; /* no fixed */
     height: 70px;
     background: #ffffff;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 2px solid #e53935;
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 0 40px;
+    width: 100%;
+    box-sizing: border-box;
+    z-index: 10;
 }
+
+/* ✅ MAIN CONTENT now scrolls naturally */
+.label-content {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 240px 1fr 240px;
+    align-items: stretch;
+    gap: 40px;
+    padding: 25px 40px;
+    box-sizing: border-box;
+}
+
+
+
 
 /* ---------------------- */
 /* HEADER LEFT            */
@@ -218,6 +230,8 @@
 
 
 
+
+
 /* ----------------------- */
 /* LEFT SIDEBAR            */
 /* ----------------------- */
@@ -230,7 +244,6 @@
     display: flex;
     flex-direction: column;
     gap: 20px;
-    height: 600px;
 }
 
 .sidebar-title {
@@ -329,19 +342,6 @@
         transform: scale(1.2);
         cursor: pointer;
     }
-
-.label-content {
-    flex: 1;
-    display: grid;
-    grid-template-columns: 270px 1fr 270px;
-    gap: 30px;
-    padding-top: 25px;
-    padding-bottom: 25px;
-    padding-left: 20px;
-    padding-right: 20px; /* FIXED */
-}
-
-
 * {
     box-sizing: border-box;
 }
@@ -355,12 +355,21 @@
     background: #fff;
     border: 2px solid #e53935;
     border-radius: 22px;
-    padding: 25px 20px;
+    padding: 20px 18px;
     display: flex;
     flex-direction: column;
-    gap: 20px;
-    height: 600px;
+    justify-content: space-between; /* 🔥 evenly distribute space */
+    box-sizing: border-box;
 }
+
+.actions-list {
+    margin-top: auto; /* pushes actions to bottom */
+}
+
+.left-sidebar, .right-sidebar {
+    align-self: start;
+}
+
 
 .property-title {
     color: #e53935;
@@ -431,34 +440,6 @@
 
 
 
-/* ----------------------- */
-/* FRAME COUNTER           */
-/* ----------------------- */
-.frame-counter {
-    text-align: center;
-    font-size: 15px;
-    color: #333;
-    margin: 8px 0 5px 0;
-}
-
-
-/* FRAME COUNTER */
-.frame-counter {
-    text-align: center;
-    margin: 10px 0 5px 0;
-    font-size: 15px;
-    color: #333;
-}
-
-/* FRAME STRIP */
-.frame-strip {
-    height: 110px;
-    background: #f3c9c9;
-    display: flex;
-    align-items: center;
-    padding: 0 25px; /* spacing from edges */
-    gap: 25px; /* space between nav buttons and thumbnails */
-}
 
 /* PREV & NEXT BUTTONS */
 .strip-nav-btn {
@@ -470,34 +451,11 @@
     padding: 0 10px;
 }
 
-/* THUMBNAIL ROW */
-.frame-thumbnails {
-    flex: 1; /* THIS is what centers the thumbnails */
-    display: flex;
-    gap: 16px; /* spacing BETWEEN thumbnails */
-    overflow-x: auto;
-    padding: 10px 0; /* vertical padding so they aren’t squeezed */
-}
-
     /* Remove scrollbars */
     .frame-thumbnails::-webkit-scrollbar {
         height: 0;
     }
 
-/* EACH THUMB */
-.thumb {
-    width: 80px; /* was 90 */
-    height: 60px; /* was 65 */
-    background: white;
-    border-radius: 10px;
-    flex-shrink: 0;
-    overflow: hidden;
-    border: 2px solid transparent;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: 0.15s ease;
-}
 
     /* ACTIVE THUMB */
     .thumb.active {
@@ -754,7 +712,7 @@
     border-radius: 20px 20px 0 0; /* ONLY top corners */
     width: calc(100% - 20px); /* fits inside grid padding */
     margin: 0 auto;
-    height: 600px; /* your total height */
+    height: 320px; /* your total height */
     padding: 20px; /* inner spacing for image */
 
     display: flex;
@@ -781,13 +739,23 @@
     align-items: center;
     overflow: hidden;
 }
+.left-sidebar,
+.right-sidebar,
+.image-canvas {
+    height: 100%; /* equal height relative to .label-content */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+
 
 
 /* BOTTOM NAVIGATION BAR */
 .image-nav {
     width: calc(100% - 20px); /* Align with image-canvas width */
     margin: 0 auto;
-    height: 60px;
+    height: 55px;
     background: #fce6e6;
     border: 2px solid #e53935;
     border-top: none; /* connects smoothly to image-canvas */
@@ -825,10 +793,113 @@
     margin-left: 6px;
     display: inline-block;
 }
+.frame-strip {
+    display: flex;
+    order: 2;
+    justify-content: space-between; /* pushes prev/next to edges */
+    align-items: center;
+    background: #ffeaea;
+    padding: 20px 40px;
+    border-top: 2px solid #e53935;
+    border-radius: 0 0 22px 22px;
+    gap: 30px;
+    width: 100%; /* make sure it fills horizontally */
+    box-sizing: border-box;
+}
+
+.frame-thumbnails {
+    flex: 1; /* fills space between prev/next */
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    justify-content: space-between; /* distribute frames evenly */
+}
+
+
+    .frame-thumbnails img {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 10px;
+        border: 2px solid transparent;
+        transition: 0.2s;
+    }
+
+        .frame-thumbnails img.active {
+            border-color: #e53935;
+        }
+
+        .frame-thumbnails img:hover {
+            transform: scale(1.03);
+        }
+
+.frame-nav {
+    background: none;
+    color: #e53935;
+    border: none;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+}
+/* move frame counter to the top */
+.frame-counter {
+    order: 1; /* 👈 move above strip */
+    margin-bottom: 6px;
+    color: #e53935;
+    font-weight: 500;
+}
+/* Buttons */
+.strip-nav-btn {
+    background: none;
+    border: none;
+    color: #e53935;
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.frame-thumbnails img {
+    width: 60px; /* smaller thumbs = more fit on one line */
+    height: 60px;
+    object-fit: cover;
+    border-radius: 10px;
+}
 
 .frame-strip {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
+    padding: 10px 20px; /* less padding so more space for frames */
 }
+
+.frame-thumbnails {
+    gap: 8px; /* tighter gap between frames */
+}
+
+.thumb img {
+    width: 55px;
+    height: 55px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    transition: 0.2s;
+}
+
+    .thumb img.highlighted {
+        border: 2px solid #e53935;
+        box-shadow: 0 0 8px rgba(229, 57, 53, 0.5);
+    }
+
+
+button.export-btn {
+    background: #e53935 !important;
+    color: white !important;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    padding: 8px 18px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+    button.export-btn:hover {
+        background: #b32c2b !important;
+    }
