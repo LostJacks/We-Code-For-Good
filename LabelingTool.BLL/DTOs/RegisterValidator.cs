@@ -8,75 +8,77 @@ namespace LabelingTool.BLL.DTOs
 {
     public static class RegisterValidator
     {
-        public static List<string> Validate(RegisterRequestDTO registerRequest)
-        {
-            var errors = new List<string>();
+        private static object registerRequest;
 
-            if (registerRequest == null)
+        public static List<string> Validate(registerRequest request)
+		{
+			var errors = new List<string>();
+
+            if (request == null)
             {
                 errors.Add("Request is required.");
                 return errors;
             }
 
-            if (string.IsNullOrWhiteSpace(registerRequest.Email))
+            if (string.IsNullOrWhiteSpace(request.Email))
             {
                 errors.Add("Email is required.");
             }
             else
             {
                 var emailPattern = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
-                if (!Regex.IsMatch(registerRequest.Email, emailPattern))
+                if (!Regex.IsMatch(request.Email, emailPattern))
                     errors.Add("Invalid email format.");
             }
 
-            if (string.IsNullOrWhiteSpace(registerRequest.Password))
+            if (string.IsNullOrWhiteSpace(request.Password))
                 errors.Add("Password is required.");
 
-            if (string.IsNullOrWhiteSpace(registerRequest.ConfirmPassword))
+            if (string.IsNullOrWhiteSpace(request.ConfirmPassword))
                 errors.Add("Confirm password is required.");
 
-            if (string.IsNullOrWhiteSpace(registerRequest.FirstName))
+            if (string.IsNullOrWhiteSpace(request.FirstName))
                 errors.Add("First name is required.");
 
-            if (string.IsNullOrWhiteSpace(registerRequest.LastName))
+            if (string.IsNullOrWhiteSpace(request.LastName))
                 errors.Add("Last name is required.");
 
-            if (!string.IsNullOrEmpty(registerRequest.Password))
+            if (!string.IsNullOrEmpty(request.Password))
             {
-                if (registerRequest.Password.Length < 8)
+                if (request.Password.Length < 8)
                     errors.Add("Password must be at least 8 characters long.");
-                if (registerRequest.Password.Length > 128)
+                if (request.Password.Length > 128)
                     errors.Add("Password must not exceed 128 characters.");
-                if (!Regex.IsMatch(registerRequest.Password, @"[A-Z]"))
+                if (!Regex.IsMatch(request.Password, @"[A-Z]"))
                     errors.Add("Password must contain at least one uppercase letter.");
-                if (!Regex.IsMatch(registerRequest.Password, @"[a-z]"))
+                if (!Regex.IsMatch(request.Password, @"[a-z]"))
                     errors.Add("Password must contain at least one lowercase letter.");
-                if (!Regex.IsMatch(registerRequest.Password, @"[0-9]"))
+                if (!Regex.IsMatch(request.Password, @"[0-9]"))
                     errors.Add("Password must contain at least one digit.");
-                if (!Regex.IsMatch(registerRequest.Password, @"[\W_]"))
+                if (!Regex.IsMatch(request.Password, @"[\W_]"))
                     errors.Add("Password must contain at least one special character.");
             }
 
-            if (!string.IsNullOrEmpty(registerRequest.Password)
-                && !string.IsNullOrEmpty(registerRequest.ConfirmPassword)
-                && registerRequest.Password != registerRequest.ConfirmPassword)
+            if (!string.IsNullOrEmpty(request.Password)
+                && !string.IsNullOrEmpty(request.ConfirmPassword)
+                && request.Password != request.ConfirmPassword)
             {
                 errors.Add("Password and confirm password do not match.");
             }
 
-            if (!string.IsNullOrWhiteSpace(registerRequest.FirstName))
+            if (!string.IsNullOrWhiteSpace(request.FirstName))
             {
-                if (registerRequest.FirstName.Length < 3)
+                if (request.FirstName.Length < 3)
                     errors.Add("First name must be at least 3 characters long.");
-                if (registerRequest.FirstName.Length > 50)
+                if (request.FirstName.Length > 50)
                     errors.Add("First name must not exceed 50 characters.");
             }
 
-            if (!string.IsNullOrWhiteSpace(registerRequest.LastName))
+            if (!string.IsNullOrWhiteSpace(request.LastName))
             {
-                if (registerRequest.LastName.Length < 2)
+                if (request.LastName.Length < 2)
                     errors.Add("Last name must be at least 2 characters long.");
-                if (registerRequest.LastName.Length > 50)
+                if (request.LastName.Length > 50)
                     errors.Add("Last name must not exceed 50 characters.");
             }
 

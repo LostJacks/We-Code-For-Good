@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 
-namespace Smart_Server.Models
+namespace SmartServer.DTOs
 {
     public class UploadRequest
     {

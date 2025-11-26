@@ -1,10 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
-using LabelingTool.DAL;
-using LabelingTool.DAL.Models;
-using Smart_Server.Models; // For UploadRequest
-using System.IO;
-using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using Microsoft.AspNetCore.Mvc;
+using LabelingTool.BLL.Interfaces;
+using LabelingTool.Model;
 
 namespace Smart_Server.Controllers
 {
@@ -12,142 +10,127 @@ namespace Smart_Server.Controllers
     [Route("api/[controller]")]
     public class ProjectsController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IProjectsService _projectsService;
+        public ProjectsController(IProjectsService projectsService)
+		{
+			_projectsService = projectsService;
+		}
 
-        public ProjectsController(ApplicationDbContext context)
+
+		[HttpGet]
+        public ActionResult<List<Project>> GetAll()
         {
-            _context = context;
-        }
-
-        // =============================
-        // ✅ GET: api/projects
-        // =============================
-        [HttpGet]
-        public IActionResult GetProjects()
-        {
-            var projects = _context.Projects
-                .Select(p => new
-                {
-                    p.Id,
-                    p.Title,
-                    p.Description,
-                    p.CreatedAt,
-                    PreviewImage = !string.IsNullOrEmpty(p.PreviewImage)
-                        ? p.PreviewImage
-                        : p.Files.Select(f => f.FilePath).FirstOrDefault()
-                          ?? "/assets/default-placeholder.png",
-                    Labels = p.Labels.Select(l => l.LabelName).ToList(),
-                    Files = p.Files.Select(f => new { f.Id, f.FilePath, f.FileType })
-                })
-                .ToList();
-
-            return Ok(projects);
-        }
-
-        // =============================
-        // ✅ POST: api/projects
-        // =============================
-        [HttpPost]
-        public IActionResult CreateProject([FromBody] Project project)
-        {
-            if (project == null || string.IsNullOrWhiteSpace(project.Title))
-                return BadRequest("Invalid project data.");
-
             try
-            {
-                project.CreatedAt = DateTime.Now;
+			{
+				var projects = _projectsService.GetAllProjects();
+				return Ok(projects);
+			}
+			catch (Exception ex)
+			{
+				return StatusCode(500, $"Error while getting projects: {ex.Message}");
+			}
+		}
+		
+		[HttpGet("{id:int}")]
+		public ActionResult<Project> GetById(int id)
+		{
+			try
+			{
+				var project = _projectsService.GetProject(id);
 
-                // ✅ Extract labels if sent from frontend
-                var incomingLabels = project.Labels?.Select(l => l.LabelName).ToList() ?? new List<string>();
+				if (project == null)
+					return NotFound(); 
 
-                // Detach labels to avoid EF Core tracking issues
-                project.Labels = null;
+				return Ok(project);
+			}
+			catch (Exception ex)
+			{
+				return StatusCode(500, $"Error while getting project: {ex.Message}");
+			}
+		}
 
-                // ✅ Save the project first
-                _context.Projects.Add(project);
-                _context.SaveChanges();
 
-                // ✅ Save labels (if any)
-                foreach (var labelName in incomingLabels)
-                {
-                    if (!string.IsNullOrWhiteSpace(labelName))
-                    {
-                        _context.ProjectLabels.Add(new ProjectLabel
-                        {
-                            LabelName = labelName,
-                            ProjectId = project.Id
-                        });
-                    }
-                }
+		// POST: api/projects
+		[HttpPost]
+		public ActionResult<int> Create([FromBody] Project project)
+		{
+			if (project == null || string.IsNullOrWhiteSpace(project.Title))
+				return BadRequest("Invalid project data.");
 
-                _context.SaveChanges();
+			try
+			{
+				if (project.CreatedAt == default)
+					project.CreatedAt = DateTime.UtcNow;
 
-                return Ok(project);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
-        }
+				//empty files for now
+				var newId = _projectsService.CreateProject(
+					project,
+					new List<ProjectFile>(),
+					new List<string>());
 
-        // =============================
-        // ✅ POST: api/projects/upload
-        // =============================
-        [HttpPost("upload")]
-        public async Task<IActionResult> UploadFile([FromForm] UploadRequest request)
-        {
-            if (request.File == null || request.File.Length == 0)
-                return BadRequest("No file uploaded.");
+				return Ok(newId);
+			}
+			catch (Exception ex)
+			{
+				return StatusCode(500, $"Error while creating project: {ex.Message}");
+			}
+		}
 
-            try
-            {
-                // Create uploads directory if missing
-                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
-                Directory.CreateDirectory(uploadsFolder);
+		//[HttpPost("upload")]
+  //      public async Task<IActionResult> UploadFile([FromForm] UploadRequest request)
+  //      {
+  //          if (request.File == null || request.File.Length == 0)
+  //              return BadRequest("No file uploaded.");
 
-                // Generate unique file name
-                var uniqueName = $"{Guid.NewGuid()}{Path.GetExtension(request.File.FileName)}";
-                var filePath = Path.Combine(uploadsFolder, uniqueName);
+  //          try
+  //          {
+  //              // Create uploads directory if missing
+  //              var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+  //              Directory.CreateDirectory(uploadsFolder);
 
-                // Save file to disk
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    await request.File.CopyToAsync(stream);
-                }
+  //              // Generate unique file name
+  //              var uniqueName = $"{Guid.NewGuid()}{Path.GetExtension(request.File.FileName)}";
+  //              var filePath = Path.Combine(uploadsFolder, uniqueName);
 
-                var relativePath = $"/uploads/{uniqueName}";
+  //              // Save file to disk
+  //              using (var stream = new FileStream(filePath, FileMode.Create))
+  //              {
+  //                  await request.File.CopyToAsync(stream);
+  //              }
 
-                // ✅ Attach file to existing project
-                if (request.ProjectId.HasValue)
-                {
-                    var project = _context.Projects.FirstOrDefault(p => p.Id == request.ProjectId.Value);
-                    if (project != null)
-                    {
-                        var newFile = new ProjectFile
-                        {
-                            FilePath = relativePath,
-                            FileType = Path.GetExtension(request.File.FileName)
-                                .ToLower()
-                                .Contains("mp4") ? "Video" : "Image",
-                            ProjectId = project.Id
-                        };
+  //              var relativePath = $"/uploads/{uniqueName}";
 
-                        _context.ProjectFiles.Add(newFile);
+  //              // ✅ Attach file to existing project
+  //              if (request.ProjectId.HasValue)
+  //              {
+  //                  var project = _context.Projects.FirstOrDefault(p => p.Id == request.ProjectId.Value);
+  //                  if (project != null)
+  //                  {
+  //                      var newFile = new ProjectFile
+  //                      {
+  //                          FilePath = relativePath,
+  //                          FileType = Path.GetExtension(request.File.FileName)
+  //                              .ToLower()
+  //                              .Contains("mp4") ? "Video" : "Image",
+  //                          ProjectId = project.Id
+  //                      };
 
-                        // Set as preview if project has none
-                        if (string.IsNullOrEmpty(project.PreviewImage))
-                            project.PreviewImage = relativePath;
+  //                      _context.ProjectFiles.Add(newFile);
 
-                        await _context.SaveChangesAsync();
-                    }
-                }
+  //                      // Set as preview if project has none
+  //                      if (string.IsNullOrEmpty(project.PreviewImage))
+  //                          project.PreviewImage = relativePath;
 
-                return Ok(new { imagePath = relativePath });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"File upload failed: {ex.Message}");
-            }
-        }
+  //                      await _context.SaveChangesAsync();
+  //                  }
+  //              }
+
+  //              return Ok(new { imagePath = relativePath });
+  //          }
+  //          catch (Exception ex)
+  //          {
+  //              return StatusCode(500, $"File upload failed: {ex.Message}"); 
+  //          }
+  //      }
     }
 }

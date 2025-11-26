@@ -1,15 +1,17 @@
-﻿using LabelingTool.Models;
+﻿using LabelingTool.Model;
 
 namespace LabelingTool.Model
 {
     public class Project
     {
-        public int Id { get; set; }
-        public string Title { get; set; }
-        public string Description { get; set; }
-        public DateTime CreatedAt { get; set; }
+		public int Id { get; set; }
+		public int UserId { get; set; }
 
-        public List<ProjectFile> Files { get; set; }
-        public List<ProjectLabel> Labels { get; set; }
-    }
+		public string Title { get; set; }
+		public string Description { get; set; }
+		public DateTime CreatedAt { get; set; }
+
+		public List<ProjectFile> Files { get; set; }
+		public List<ProjectLabel> Labels { get; set; }
+	}
 }
