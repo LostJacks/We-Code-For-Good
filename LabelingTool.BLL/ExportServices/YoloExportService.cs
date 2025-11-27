@@ -1,5 +1,5 @@
-﻿using LabelingTool.DAL.BBRepositories;
-using LabelingTool.DAL.GeneralRepositories;
+﻿using LabelingTool.DAL.GeneralRepositories;
+using LabelingTool.DAL.Interfaces;
 using Model.BBDTOs;
 using Model.ExportDTOs;
 using System;
