@@ -1,186 +1,156 @@
-﻿using Microsoft.Data.SqlClient;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Model.BBDTOs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace LabelingTool.DAL.BBRepositories
 {
     public class BoundingBoxRepository : IBoundingBoxRepository
     {
-        private readonly string _connectionString;
+        // In-memory mock DB
+        private static readonly List<BoundingBoxDto> _mockBoxes = new();
+        private static int _nextId = 1;
+
+        // Simulate label class lookup
+        private static readonly Dictionary<int, string> _mockLabelClasses = new()
+        {
+            { 1, "T-shirt" },
+            { 2, "Blazer" },
+            { 3, "Boots" },
+            { 4, "Cardigan" },
+            { 5, "Backpack" },
+            { 6, "Gloves" }
+        };
+
+        private static readonly Dictionary<int, string> _mockColors = new()
+        {
+            { 1, "#e53935" }, // red
+            { 2, "#2196f3" }, // blue
+            { 3, "#4caf50" }, // green
+            { 4, "#ff9800" }, // orange
+            { 5, "#9c27b0" }, // purple
+            { 6, "#009688" }  // teal
+        };
 
         public BoundingBoxRepository(IConfiguration configuration)
         {
-            var connectionString = configuration.GetConnectionString("DefaultConnection");
-
-            if (string.IsNullOrEmpty(connectionString))
-                throw new InvalidOperationException("Connection string 'DefaultConnection' not found in appsettings.json");
-
-            _connectionString = connectionString;
+            Console.WriteLine("[Mock DB] BoundingBoxRepository initialized (no real DB)");
         }
 
+        // =====================================================
+        // GET ALL BOXES FOR A MEDIA ID
+        // =====================================================
         public async Task<List<BoundingBoxDto>> GetByMediaIdAsync(int mediaId)
         {
-            var boundingBoxes = new List<BoundingBoxDto>();
+            await Task.Delay(50); // simulate DB latency
 
-            using (var connection = new SqlConnection(_connectionString))
-            {
-                await connection.OpenAsync();
+            var boxes = _mockBoxes
+                .Where(b => b.MediaId == mediaId)
+                .Select(b => MapDto(b))
+                .ToList();
 
-                var command = new SqlCommand(@"
-                    SELECT 
-                        bb.bounding_box_id,
-                        bb.media_id,
-                        bb.labelclass_id,
-                        lc.name AS class_name,
-                        bb.x1,
-                        bb.y1,
-                        bb.x2,
-                        bb.y2
-                    FROM Boundingbox bb
-                    INNER JOIN Labelclass lc ON bb.labelclass_id = lc.labelclass_id
-                    WHERE bb.media_id = @MediaId
-                    ORDER BY bb.bounding_box_id", connection);
-
-                command.Parameters.AddWithValue("@MediaId", mediaId);
-
-                using (var reader = await command.ExecuteReaderAsync())
-                {
-                    while (await reader.ReadAsync())
-                    {
-                        boundingBoxes.Add(new BoundingBoxDto
-                        {
-                            BoundingBoxId = reader.GetInt32(0),
-                            MediaId = reader.GetInt32(1),
-                            LabelClassId = reader.GetInt32(2),
-                            ClassName = reader.GetString(3),
-                            X1 = reader.GetFloat(4),
-                            Y1 = reader.GetFloat(5),
-                            X2 = reader.GetFloat(6),
-                            Y2 = reader.GetFloat(7)
-                        });
-                    }
-                }
-            }
-
-            return boundingBoxes;
+            Console.WriteLine($"[Mock DB] Returned {boxes.Count} boxes for media {mediaId}");
+            return boxes;
         }
 
+        // =====================================================
+        // GET ONE BOX BY ID
+        // =====================================================
         public async Task<BoundingBoxDto> GetByIdAsync(int boundingBoxId)
         {
-            using (var connection = new SqlConnection(_connectionString))
+            await Task.Delay(30);
+            var box = _mockBoxes.FirstOrDefault(b => b.BoundingBoxId == boundingBoxId);
+            if (box == null)
             {
-                await connection.OpenAsync();
-
-                var command = new SqlCommand(@"
-                    SELECT 
-                        bb.bounding_box_id,
-                        bb.media_id,
-                        bb.labelclass_id,
-                        lc.name AS class_name,
-                        bb.x1,
-                        bb.y1,
-                        bb.x2,
-                        bb.y2
-                    FROM Boundingbox bb
-                    INNER JOIN Labelclass lc ON bb.labelclass_id = lc.labelclass_id
-                    WHERE bb.bounding_box_id = @BoundingBoxId", connection);
-
-                command.Parameters.AddWithValue("@BoundingBoxId", boundingBoxId);
-
-                using (var reader = await command.ExecuteReaderAsync())
-                {
-                    if (await reader.ReadAsync())
-                    {
-                        return new BoundingBoxDto
-                        {
-                            BoundingBoxId = reader.GetInt32(0),
-                            MediaId = reader.GetInt32(1),
-                            LabelClassId = reader.GetInt32(2),
-                            ClassName = reader.GetString(3),
-                            X1 = reader.GetFloat(4),
-                            Y1 = reader.GetFloat(5),
-                            X2 = reader.GetFloat(6),
-                            Y2 = reader.GetFloat(7)
-                        };
-                    }
-                }
+                Console.WriteLine($"[Mock DB] Box {boundingBoxId} not found");
+                return null;
             }
 
-            return null;
+            Console.WriteLine($"[Mock DB] Found box #{boundingBoxId} ({box.ClassName})");
+            return MapDto(box);
         }
 
+        // =====================================================
+        // CREATE NEW BOX
+        // =====================================================
         public async Task<int> CreateAsync(CreateBoundingBoxRequest request)
         {
-            using (var connection = new SqlConnection(_connectionString))
+            await Task.Delay(40);
+
+            var newBox = new BoundingBoxDto
             {
-                await connection.OpenAsync();
+                BoundingBoxId = _nextId++,
+                MediaId = request.MediaId,
+                LabelClassId = request.LabelClassId,
+                ClassName = _mockLabelClasses.ContainsKey(request.LabelClassId)
+                    ? _mockLabelClasses[request.LabelClassId]
+                    : "Unlabeled",
+                X1 = request.X1,
+                Y1 = request.Y1,
+                X2 = request.X2,
+                Y2 = request.Y2
+            };
 
-                var command = new SqlCommand(@"
-                    INSERT INTO Boundingbox (media_id, labelclass_id, x1, y1, x2, y2)
-                    OUTPUT INSERTED.bounding_box_id
-                    VALUES (@MediaId, @LabelClassId, @X1, @Y1, @X2, @Y2)",
-                    connection);
-
-                command.Parameters.AddWithValue("@MediaId", request.MediaId);
-                command.Parameters.AddWithValue("@LabelClassId", request.LabelClassId);
-                command.Parameters.AddWithValue("@X1", request.X1);
-                command.Parameters.AddWithValue("@Y1", request.Y1);
-                command.Parameters.AddWithValue("@X2", request.X2);
-                command.Parameters.AddWithValue("@Y2", request.Y2);
-
-                var newId = (int)await command.ExecuteScalarAsync();
-                return newId;
-            }
+            _mockBoxes.Add(newBox);
+            Console.WriteLine($"[Mock DB] Created box #{newBox.BoundingBoxId} for Media {request.MediaId} ({newBox.ClassName})");
+            return newBox.BoundingBoxId;
         }
 
+        // =====================================================
+        // UPDATE EXISTING BOX
+        // =====================================================
         public async Task UpdateAsync(UpdateBoundingBoxRequest request)
         {
-            using (var connection = new SqlConnection(_connectionString))
+            await Task.Delay(40);
+            var existing = _mockBoxes.FirstOrDefault(b => b.BoundingBoxId == request.BoundingBoxId);
+            if (existing == null)
             {
-                await connection.OpenAsync();
-
-                var command = new SqlCommand(@"
-                    UPDATE Boundingbox 
-                    SET 
-                        labelclass_id = @LabelClassId,
-                        x1 = @X1,
-                        y1 = @Y1,
-                        x2 = @X2,
-                        y2 = @Y2
-                    WHERE bounding_box_id = @BoundingBoxId",
-                    connection);
-
-                command.Parameters.AddWithValue("@BoundingBoxId", request.BoundingBoxId);
-                command.Parameters.AddWithValue("@LabelClassId", request.LabelClassId);
-                command.Parameters.AddWithValue("@X1", request.X1);
-                command.Parameters.AddWithValue("@Y1", request.Y1);
-                command.Parameters.AddWithValue("@X2", request.X2);
-                command.Parameters.AddWithValue("@Y2", request.Y2);
-
-                await command.ExecuteNonQueryAsync();
+                Console.WriteLine($"[Mock DB] Tried to update non-existent box {request.BoundingBoxId}");
+                return;
             }
+
+            existing.LabelClassId = request.LabelClassId;
+            existing.ClassName = _mockLabelClasses.ContainsKey(request.LabelClassId)
+                ? _mockLabelClasses[request.LabelClassId]
+                : "Unlabeled";
+            existing.X1 = request.X1;
+            existing.Y1 = request.Y1;
+            existing.X2 = request.X2;
+            existing.Y2 = request.Y2;
+
+            Console.WriteLine($"[Mock DB] Updated box #{request.BoundingBoxId} → {existing.ClassName}");
         }
 
+        // =====================================================
+        // DELETE BOX
+        // =====================================================
         public async Task DeleteAsync(int boundingBoxId)
         {
-            using (var connection = new SqlConnection(_connectionString))
+            await Task.Delay(30);
+            _mockBoxes.RemoveAll(b => b.BoundingBoxId == boundingBoxId);
+            Console.WriteLine($"[Mock DB] Deleted box #{boundingBoxId}");
+        }
+
+        // =====================================================
+        // MAP DTO — always return full data with name + color
+        // =====================================================
+        private BoundingBoxDto MapDto(BoundingBoxDto b)
+        {
+            return new BoundingBoxDto
             {
-                await connection.OpenAsync();
-
-                var command = new SqlCommand(@"
-                    DELETE FROM Boundingbox 
-                    WHERE bounding_box_id = @BoundingBoxId",
-                    connection);
-
-                command.Parameters.AddWithValue("@BoundingBoxId", boundingBoxId);
-
-                await command.ExecuteNonQueryAsync();
-            }
+                BoundingBoxId = b.BoundingBoxId,
+                MediaId = b.MediaId,
+                LabelClassId = b.LabelClassId,
+                ClassName = _mockLabelClasses.ContainsKey(b.LabelClassId)
+                    ? _mockLabelClasses[b.LabelClassId]
+                    : "Unlabeled",
+                X1 = b.X1,
+                Y1 = b.Y1,
+                X2 = b.X2,
+                Y2 = b.Y2
+            };
         }
     }
 }

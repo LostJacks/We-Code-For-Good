@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Text;
 using LabelingTool.BLL.Interfaces;
 using LabelingTool.BLL.Services;
@@ -15,7 +15,7 @@ using Microsoft.AspNetCore.Identity;
 var builder = WebApplication.CreateBuilder(args);
 
 // =============================================================
-// ? JWT CONFIGURATION
+// 🔐 JWT CONFIGURATION
 // =============================================================
 var signingKeyString = builder.Configuration["Jwt:SigningKey"];
 if (string.IsNullOrWhiteSpace(signingKeyString))
@@ -47,21 +47,26 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 // =============================================================
-// ? CORS CONFIGURATION
+// 🌐 CORS CONFIGURATION
 // =============================================================
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReact", policy =>
     {
-        policy.WithOrigins("http://localhost:5173", "http://localhost:3000")
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
+        policy.WithOrigins(
+                "https://localhost:55106", // Visual Studio React proxy
+                "http://localhost:55106",  // Non-HTTPS fallback
+                "http://localhost:5173",   // Vite dev server
+                "http://localhost:3000"    // Standard React server
+            )
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
     });
 });
 
 // =============================================================
-// ? DATABASE + CORE SERVICES
+// 🗄️ DATABASE + CORE SERVICES
 // =============================================================
 builder.Services.AddSingleton<Database>(sp =>
 {
@@ -71,7 +76,7 @@ builder.Services.AddSingleton<Database>(sp =>
 });
 
 // =============================================================
-// ? NORMAL SERVICES (Auth, Users, Projects)
+// 🧠 NORMAL SERVICES (Auth, Users, Projects)
 // =============================================================
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -81,24 +86,25 @@ builder.Services.AddScoped<IProjectsService, ProjectsService>();
 builder.Services.AddScoped<IPasswordHasher<Model.AppUser>, PasswordHasher<Model.AppUser>>();
 
 // =============================================================
-// ? BOUNDING BOX SERVICES
+// 🟩 BOUNDING BOX SERVICES
 // =============================================================
 builder.Services.AddScoped<IBoundingBoxRepository, BoundingBoxRepository>();
 builder.Services.AddScoped<IBoundingBoxService, BoundingBoxService>();
 
 // =============================================================
-// ? CONTROLLERS + SWAGGER
+// 📦 CONTROLLERS + SWAGGER
 // =============================================================
 builder.Services.AddControllers()
-    .AddJsonOptions(o => o.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase);
+    .AddJsonOptions(o =>
+        o.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+    );
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
 builder.Services.AddAuthorization();
 
 // =============================================================
-// ? APP PIPELINE
+// 🚀 APP PIPELINE
 // =============================================================
 var app = builder.Build();
 
@@ -109,8 +115,13 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// ✅ CORS must be before authentication
 app.UseCors("AllowReact");
+
 app.UseAuthentication();
 app.UseAuthorization();
+
 app.MapControllers();
+
 app.Run();
