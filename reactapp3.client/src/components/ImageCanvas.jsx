@@ -4,7 +4,7 @@ export default function ImageCanvas({
     activeClass,
     labelClasses,
     onBoxesChange,
-    onSelectBox,        // ✅ NEW: tell parent which box is selected
+    onSelectBox,
     visibleLabel,
     cursorColorMode,
 }) {
@@ -20,6 +20,8 @@ export default function ImageCanvas({
     const [resizeCorner, setResizeCorner] = useState(null);
     const imageUrl = "/assets/bags.jpg";
 
+    const MIN_BOX_SIZE = 5; // ✅ only draw if drag > 5px
+
     // --- Load image ---
     useEffect(() => {
         const img = new Image();
@@ -30,13 +32,24 @@ export default function ImageCanvas({
         };
     }, [imageUrl]);
 
-    // --- Resize canvas ---
+    // --- Resize canvas with DPI fix ---
     const resizeCanvas = () => {
         const canvas = canvasRef.current;
         if (!canvas) return;
+
         const wrapper = canvas.parentElement.getBoundingClientRect();
-        canvas.width = wrapper.width;
-        canvas.height = wrapper.height;
+        const ctx = canvas.getContext("2d");
+        const dpr = window.devicePixelRatio || 1;
+
+        // ✅ Fix: scale canvas for high-DPI screens
+        canvas.width = wrapper.width * dpr;
+        canvas.height = wrapper.height * dpr;
+
+        // Ensure canvas displays correctly in CSS pixels
+        canvas.style.width = `${wrapper.width}px`;
+        canvas.style.height = `${wrapper.height}px`;
+
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         drawAll();
     };
 
@@ -53,7 +66,8 @@ export default function ImageCanvas({
         const ctx = canvas.getContext("2d");
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(imgRef.current, 0, 0, canvas.width, canvas.height);
+        const { width, height } = canvas.getBoundingClientRect();
+        ctx.drawImage(imgRef.current, 0, 0, width, height);
 
         const visibleBoxes = visibleLabel
             ? boxes.filter((b) =>
@@ -90,8 +104,11 @@ export default function ImageCanvas({
     // --- Mouse events ---
     const handleMouseDown = (e) => {
         const rect = e.target.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
+        const scaleX = canvasRef.current.width / rect.width;
+        const scaleY = canvasRef.current.height / rect.height;
+        const x = (e.clientX - rect.left) * scaleX / (window.devicePixelRatio || 1);
+        const y = (e.clientY - rect.top) * scaleY / (window.devicePixelRatio || 1);
+
         const clickedIndex = findBoxAt(x, y);
 
         if (clickedIndex !== null && selectedIndex === clickedIndex) {
@@ -105,30 +122,41 @@ export default function ImageCanvas({
             }
         } else if (clickedIndex !== null) {
             setSelectedIndex(clickedIndex);
-            onSelectBox && onSelectBox(boxes[clickedIndex]); // ✅ notify parent
+            onSelectBox && onSelectBox(boxes[clickedIndex]);
             drawAll();
         } else {
+            // ✅ Start drawing only — don’t create yet
             setStart({ x, y });
             setDrawing(true);
             setSelectedIndex(null);
-            onSelectBox && onSelectBox(null); // ✅ deselect in sidebar
+            onSelectBox && onSelectBox(null);
         }
     };
 
     const handleMouseMove = (e) => {
         const rect = e.target.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
+        const scaleX = canvasRef.current.width / rect.width;
+        const scaleY = canvasRef.current.height / rect.height;
+        const x = (e.clientX - rect.left) * scaleX / (window.devicePixelRatio || 1);
+        const y = (e.clientY - rect.top) * scaleY / (window.devicePixelRatio || 1);
 
         if (drawing) {
-            drawAll({
-                x: Math.min(start.x, x),
-                y: Math.min(start.y, y),
-                width: Math.abs(x - start.x),
-                height: Math.abs(y - start.y),
-                color: activeClass?.color || "#e53935",
-                label: activeClass?.name || "Unlabeled",
-            });
+            const width = Math.abs(x - start.x);
+            const height = Math.abs(y - start.y);
+
+            // ✅ Only show preview if dragging past threshold
+            if (width > MIN_BOX_SIZE && height > MIN_BOX_SIZE) {
+                drawAll({
+                    x: Math.min(start.x, x),
+                    y: Math.min(start.y, y),
+                    width,
+                    height,
+                    color: activeClass?.color || "#e53935",
+                    label: activeClass?.name || "Unlabeled",
+                });
+            } else {
+                drawAll(); // no box preview yet
+            }
         } else if (dragging && selectedIndex !== null) {
             const dx = x - start.x;
             const dy = y - start.y;
@@ -141,7 +169,7 @@ export default function ImageCanvas({
             setStart({ x, y });
             setBoxes(updated);
             onBoxesChange && onBoxesChange(updated);
-            onSelectBox && onSelectBox(updated[selectedIndex]); // ✅ live update
+            onSelectBox && onSelectBox(updated[selectedIndex]);
             drawAll();
         } else if (resizing && selectedIndex !== null) {
             const updated = [...boxes];
@@ -150,21 +178,24 @@ export default function ImageCanvas({
             updated[selectedIndex] = b;
             setBoxes(updated);
             onBoxesChange && onBoxesChange(updated);
-            onSelectBox && onSelectBox(b); // ✅ live update during resize
+            onSelectBox && onSelectBox(b);
             drawAll();
         }
     };
 
     const handleMouseUp = (e) => {
         const rect = e.target.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
+        const scaleX = canvasRef.current.width / rect.width;
+        const scaleY = canvasRef.current.height / rect.height;
+        const x = (e.clientX - rect.left) * scaleX / (window.devicePixelRatio || 1);
+        const y = (e.clientY - rect.top) * scaleY / (window.devicePixelRatio || 1);
 
         if (drawing) {
             const width = Math.abs(x - start.x);
             const height = Math.abs(y - start.y);
 
-            if (width > 5 && height > 5) {
+            // ✅ Only create box if dragged enough
+            if (width > MIN_BOX_SIZE && height > MIN_BOX_SIZE) {
                 const newBox = {
                     x: Math.min(start.x, x),
                     y: Math.min(start.y, y),
@@ -176,7 +207,10 @@ export default function ImageCanvas({
                 const updated = [...boxes, newBox];
                 setBoxes(updated);
                 onBoxesChange && onBoxesChange(updated);
-                onSelectBox && onSelectBox(newBox); // ✅ auto-select new box
+                onSelectBox && onSelectBox(newBox);
+            } else {
+                // Just a click → no new box
+                drawAll();
             }
         }
 
@@ -186,33 +220,23 @@ export default function ImageCanvas({
         setResizeCorner(null);
     };
 
-    const handleDoubleClick = (e) => {
-        const rect = e.target.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        const clickedIndex = findBoxAt(x, y);
-        setSelectedIndex(clickedIndex);
-        onSelectBox && onSelectBox(clickedIndex !== null ? boxes[clickedIndex] : null); // ✅
-        drawAll();
-    };
-
-    // --- Keyboard controls ---
+    // --- Keyboard controls (Delete / D / Escape / Number keys) ---
     useEffect(() => {
         const handleKeyDown = (e) => {
             if (selectedIndex === null) return;
 
-            // ✅ DELETE BOX (Delete key or D)
+            // ✅ DELETE BOX
             if (e.key === "Delete" || e.key.toLowerCase() === "d") {
                 const updated = boxes.filter((_, i) => i !== selectedIndex);
                 setBoxes(updated);
                 setSelectedIndex(null);
                 onBoxesChange && onBoxesChange(updated);
-                onSelectBox && onSelectBox(null); // ✅ clear sidebar
+                onSelectBox && onSelectBox(null);
                 drawAll();
                 return;
             }
 
-            // ✅ ESCAPE deselects
+            // ✅ ESCAPE → deselect
             if (e.key === "Escape") {
                 setSelectedIndex(null);
                 onSelectBox && onSelectBox(null);
@@ -220,9 +244,10 @@ export default function ImageCanvas({
                 return;
             }
 
-            // ✅ NUMBER KEYS to change class
-            if (!isNaN(parseInt(e.key)) && labelClasses) {
-                const index = parseInt(e.key) - 1;
+            // ✅ NUMBER KEYS → reassign class
+            if (!isNaN(parseInt(e.key)) && labelClasses?.length) {
+                const num = parseInt(e.key);
+                const index = num === 0 ? 9 : num - 1;
                 if (labelClasses[index]) {
                     const updated = [...boxes];
                     updated[selectedIndex] = {
@@ -232,7 +257,7 @@ export default function ImageCanvas({
                     };
                     setBoxes(updated);
                     onBoxesChange && onBoxesChange(updated);
-                    onSelectBox && onSelectBox(updated[selectedIndex]); // ✅ live update label
+                    onSelectBox && onSelectBox(updated[selectedIndex]);
                     drawAll();
                 }
             }
@@ -283,6 +308,7 @@ export default function ImageCanvas({
         }
     };
 
+    // --- Redraw listener ---
     useEffect(() => {
         drawAll();
     }, [boxes, activeClass, selectedIndex, visibleLabel]);
@@ -311,7 +337,6 @@ export default function ImageCanvas({
                         onMouseDown={handleMouseDown}
                         onMouseMove={handleMouseMove}
                         onMouseUp={handleMouseUp}
-                        onDoubleClick={handleDoubleClick}
                         style={{
                             width: "100%",
                             height: "100%",
@@ -322,16 +347,6 @@ export default function ImageCanvas({
                         }}
                     />
                 </div>
-            </div>
-
-            <div className="image-nav">
-                <button className="nav-btn">
-                    <span className="arrow-left">◀</span> Prev
-                </button>
-
-                <button className="nav-btn">
-                    Next <span className="arrow-right">▶</span>
-                </button>
             </div>
         </div>
     );
