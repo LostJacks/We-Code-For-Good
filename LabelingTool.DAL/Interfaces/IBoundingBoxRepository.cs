@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LabelingTool.DAL.BBRepositories
+namespace LabelingTool.DAL.Interfaces
 {
     public interface IBoundingBoxRepository
     {

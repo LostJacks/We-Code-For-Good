@@ -13,6 +13,7 @@ export default function NewProjectModal({ isOpen, onClose, onCreated }) {
     const [folderError, setFolderError] = useState("");
     const [loading, setLoading] = useState(false);
 
+    // Toggle body scroll lock when modal is open
     useEffect(() => {
         document.body.classList.toggle("modal-open", isOpen);
         return () => document.body.classList.remove("modal-open");
@@ -29,6 +30,7 @@ export default function NewProjectModal({ isOpen, onClose, onCreated }) {
         setNewLabel("");
     };
 
+    // File and folder handlers
     const handleFileChange = (e) => setFiles(Array.from(e.target.files));
 
     const handleFolderChange = (e) => {
@@ -45,6 +47,7 @@ export default function NewProjectModal({ isOpen, onClose, onCreated }) {
         }
     };
 
+    // ✅ Submit project
     const handleSubmit = async () => {
         if (!projectName.trim()) {
             alert("Please enter a project name!");
@@ -54,11 +57,11 @@ export default function NewProjectModal({ isOpen, onClose, onCreated }) {
         try {
             setLoading(true);
 
-            // ✅ Step 1 — Create project (send labels properly)
+            // ✅ Step 1 — Create project (send correct DTO structure)
             const newProject = {
                 Title: projectName,
                 Description: description,
-                labels: labels.map((label) => ({ LabelName: label })),
+                Labels: labels, // ✅ matches backend DTO (List<string>)
             };
 
             const createRes = await fetch(`${API}/api/projects`, {
@@ -70,7 +73,7 @@ export default function NewProjectModal({ isOpen, onClose, onCreated }) {
             if (!createRes.ok) throw new Error("Failed to create project");
             const createdProject = await createRes.json();
 
-            // ✅ Step 2 — Upload files and folders
+            // ✅ Step 2 — Upload files & folders
             const allFiles = [...files, ...folderFiles];
             for (const file of allFiles) {
                 const formData = new FormData();
@@ -83,7 +86,7 @@ export default function NewProjectModal({ isOpen, onClose, onCreated }) {
                 });
             }
 
-            // ✅ Step 3 — Reset modal
+            // ✅ Step 3 — Reset modal & trigger refresh
             setProjectName("");
             setDescription("");
             setLabels([]);
@@ -100,6 +103,7 @@ export default function NewProjectModal({ isOpen, onClose, onCreated }) {
         }
     };
 
+    // Close modal when clicking outside content
     const handleOverlayClick = (e) => {
         if (e.target.classList.contains("modal-overlay")) onClose();
     };
@@ -122,12 +126,14 @@ export default function NewProjectModal({ isOpen, onClose, onCreated }) {
                     type="text"
                     value={projectName}
                     onChange={(e) => setProjectName(e.target.value)}
+                    placeholder="Enter project title"
                 />
 
                 <label>Project Description</label>
                 <textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Describe your project (optional)"
                 ></textarea>
 
                 {/* === Upload Boxes === */}
@@ -216,7 +222,7 @@ export default function NewProjectModal({ isOpen, onClose, onCreated }) {
                     <button onClick={addLabel}>+</button>
                 </div>
 
-                {/* === CENTERED DONE BUTTON (CSS next step) === */}
+                {/* === Submit Button === */}
                 <div className="modal-done-container">
                     <button
                         className="modal-done"
