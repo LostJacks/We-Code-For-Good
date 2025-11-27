@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using LabelingTool.BLL.BBServices;
+using LabelingTool.BLL.ExportServices;
+using Microsoft.AspNetCore.Mvc;
+using Model.BBDTOs;
+using Model.ExportDTOs;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using LabelingTool.BLL.BBServices;
-using Model.BBDTOs;
 
 namespace SmartServer.Controllers
 {
@@ -12,15 +14,15 @@ namespace SmartServer.Controllers
     public class BoundingBoxController : ControllerBase
     {
         private readonly IBoundingBoxService _service;
+        private readonly IYoloExportService _yoloExportService;
 
-        public BoundingBoxController(IBoundingBoxService service)
+        public BoundingBoxController(IBoundingBoxService service, IYoloExportService yoloExportService)
         {
             _service = service;
+            _yoloExportService = yoloExportService;
         }
 
-        /// <summary>
         /// Get all bounding boxes for a specific media/image
-        /// </summary>
         [HttpGet("media/{mediaId}")]
         public async Task<ActionResult<List<BoundingBoxDto>>> GetByMedia(int mediaId)
         {
@@ -39,9 +41,7 @@ namespace SmartServer.Controllers
             }
         }
 
-        /// <summary>
         /// Get a single bounding box by ID
-        /// </summary>
         [HttpGet("{id}")]
         public async Task<ActionResult<BoundingBoxDto>> GetById(int id)
         {
@@ -64,9 +64,7 @@ namespace SmartServer.Controllers
             }
         }
 
-        /// <summary>
         /// Create a new bounding box
-        /// </summary>
         [HttpPost]
         public async Task<ActionResult<BoundingBoxDto>> Create([FromBody] CreateBoundingBoxRequest request)
         {
@@ -88,9 +86,7 @@ namespace SmartServer.Controllers
             }
         }
 
-        /// <summary>
         /// Update an existing bounding box
-        /// </summary>
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] UpdateBoundingBoxRequest request)
         {
@@ -115,9 +111,7 @@ namespace SmartServer.Controllers
             }
         }
 
-        /// <summary>
         /// Delete a bounding box
-        /// </summary>
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
@@ -135,5 +129,58 @@ namespace SmartServer.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
+
+        [HttpGet("export/yolo/{projectId}")]
+        [ProducesResponseType(typeof(FileContentResult), 200)]
+        public async Task<IActionResult> ExportYolo(int projectId)
+        {
+            try
+            {
+                if (projectId <= 0)
+                    return BadRequest("Invalid project ID");
+
+                // Generate YOLO export data
+                var yoloExport = await _yoloExportService.GenerateYoloExportAsync(projectId);
+
+                if (!yoloExport.Images.Any())
+                    return BadRequest("No annotated images found in project");
+
+                // Create ZIP file
+                var zipBytes = await _yoloExportService.CreateYoloZipAsync(yoloExport);
+
+                // Return as downloadable ZIP
+                string filename = $"yolo_export_{yoloExport.ProjectName}_{DateTime.Now:yyyyMMdd_HHmmss}.zip";
+                return File(zipBytes, "application/zip", filename);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"YOLO Export Error: {ex.Message}");
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        [HttpGet("export/yolo/{projectId}/preview")]
+        [ProducesResponseType(typeof(YoloExportDto), 200)]
+        public async Task<IActionResult> PreviewYoloExport(int projectId)
+        {
+            try
+            {
+                var yoloExport = await _yoloExportService.GenerateYoloExportAsync(projectId);
+                return Ok(yoloExport);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
     }
 }

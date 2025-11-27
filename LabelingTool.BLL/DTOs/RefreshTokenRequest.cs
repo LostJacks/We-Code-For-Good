@@ -1,7 +1,15 @@
-﻿namespace LabelingTool.BLL.DTOs
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace LabelingTool.BLL.DTOs
 {
-    public class RefreshTokenRequest
-    {
-        public string RefreshToken { get; set; } = string.Empty;
-    }
+	public class RefreshTokenRequest
+	{
+		public string RefreshToken { get; set; } = string.Empty;
+
+		public string AccessToken { get; set; } = string.Empty;
+	}
 }
