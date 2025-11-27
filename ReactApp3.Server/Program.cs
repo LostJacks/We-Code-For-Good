@@ -1,5 +1,7 @@
 using System;
 using System.Text;
+using LabelingTool.BLL.ExportServices;
+using LabelingTool.DAL.GeneralRepositories;
 using LabelingTool.BLL.Interfaces;
 using LabelingTool.BLL.Services;
 using LabelingTool.BLL.BBServices;
@@ -79,12 +81,16 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IProjectsRepository, ProjectRepository>();
 builder.Services.AddScoped<IProjectsService, ProjectsService>();
 builder.Services.AddScoped<IPasswordHasher<Model.AppUser>, PasswordHasher<Model.AppUser>>();
+builder.Services.AddScoped<IMediaRepository, MediaRepository>();
+builder.Services.AddScoped<ILabelClassRepository, LabelClassRepository>();
+builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
 
 // =============================================================
 // ? BOUNDING BOX SERVICES
 // =============================================================
 builder.Services.AddScoped<IBoundingBoxRepository, BoundingBoxRepository>();
 builder.Services.AddScoped<IBoundingBoxService, BoundingBoxService>();
+builder.Services.AddScoped<IYoloExportService, YoloExportService>();
 
 // =============================================================
 // ? CONTROLLERS + SWAGGER
