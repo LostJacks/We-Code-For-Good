@@ -1,18 +1,16 @@
 using LabelingTool.BLL.BBServices;
 using LabelingTool.BLL.ExportServices;
 using LabelingTool.DAL.BBRepositories;
-using LabelingTool.DAL.BBRepositories.MockData;
 using LabelingTool.DAL.GeneralRepositories;
-using LabelingTool.DAL.GeneralRepositories.MockData;
 using System;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddScoped<IBoundingBoxRepository, MockBoundingBoxRepository>();
-builder.Services.AddScoped<IMediaRepository, MockMediaRepository>();
-builder.Services.AddScoped<ILabelClassRepository, MockLabelClassRepository>();
-builder.Services.AddScoped<IProjectRepository, MockProjectRepository>();
+builder.Services.AddScoped<IBoundingBoxRepository, BoundingBoxRepository>();
+builder.Services.AddScoped<IMediaRepository, MediaRepository>();
+builder.Services.AddScoped<ILabelClassRepository, LabelClassRepository>();
+builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
 
 builder.Services.AddScoped<IBoundingBoxService, BoundingBoxService>();
 builder.Services.AddScoped<IYoloExportService, YoloExportService>();
