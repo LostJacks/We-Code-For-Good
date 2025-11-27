@@ -1,0 +1,950 @@
+﻿html, body {
+    height: auto;
+    margin: 0;
+    padding: 0;
+    background: #fafafa;
+    overflow-x: hidden;
+    overflow-y: auto; /* ✅ full document scrolls */
+    background: #fff;
+    color: #000;
+    color-scheme: light !important;
+}
+input, textarea, select {
+    background: #fff !important;
+    color: #000 !important;
+}
+
+.label-page {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* allows page to grow naturally */
+    width: 100vw;
+    background: #fafafa;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden; /* keep horizontal scroll hidden */
+}
+
+
+/* ✅ HEADER scrolls with the page */
+.label-header {
+    position: relative; /* no fixed */
+    height: 70px;
+    background: #ffffff;
+    border-bottom: 2px solid #e53935;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 40px;
+    width: 100%;
+    box-sizing: border-box;
+    z-index: 10;
+}
+
+/* ✅ MAIN CONTENT now scrolls naturally */
+.label-content {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 240px 1fr 240px;
+    align-items: stretch;
+    gap: 40px;
+    padding: 25px 40px;
+    box-sizing: border-box;
+}
+
+
+
+
+/* ---------------------- */
+/* HEADER LEFT            */
+/* ---------------------- */
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.autosave-text {
+    font-weight: 500;
+    font-size: 15px;
+}
+
+/* AUTOSAVE SWITCH (TOP LEFT) */
+.autosave-switch {
+    position: relative;
+    width: 34px;
+    height: 18px;
+}
+
+    .autosave-switch input {
+        display: none;
+    }
+
+    .autosave-switch .autosave-slider {
+        position: absolute;
+        inset: 0;
+        background: #fff;
+        border: 2px solid #e53935;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: 0.25s;
+    }
+
+        .autosave-switch .autosave-slider::before {
+            content: "";
+            width: 14px;
+            height: 14px;
+            background: #e53935;
+            position: absolute;
+            border-radius: 50%;
+            top: 50%;
+            left: 1px;
+            transform: translateY(-50%);
+            transition: 0.25s;
+        }
+
+    /* Autosave ON */
+    .autosave-switch input:checked + .autosave-slider {
+        background: #e53935;
+    }
+
+        .autosave-switch input:checked + .autosave-slider::before {
+            transform: translate(16px, -50%);
+            background: #fff;
+        }
+
+/* ---------------------- */
+/* HEADER RIGHT           */
+/* ---------------------- */
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.settings-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+}
+
+.settings-icon {
+    font-size: 22px;
+    color: #e53935;
+}
+
+.settings-btn:hover .settings-icon {
+    color: #b32c2b;
+}
+
+/* ---------------------- */
+/* SETTINGS DROPDOWN      */
+/* ---------------------- */
+.settings-dropdown {
+    position: absolute;
+    top: 70px;
+    right: 40px;
+    width: 260px;
+    background: #fff;
+    border: 2px solid #e53935;
+    border-radius: 16px;
+    padding: 14px 18px;
+    z-index: 999;
+    box-shadow: 0 10px 22px rgba(0,0,0,0.1);
+}
+
+.settings-dropdown-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.settings-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #e53935;
+}
+
+.settings-close {
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: #e53935;
+    cursor: pointer;
+}
+
+/* Settings rows */ 
+.settings-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    font-size: 14px;
+}
+
+/* SETTINGS SWITCHES */
+.settings-switch {
+    position: relative;
+    width: 34px;
+    height: 18px;
+}
+
+    .settings-switch input {
+        display: none;
+    }
+
+    .settings-switch .settings-slider {
+        position: absolute;
+        inset: 0;
+        background: #fff;
+        border-radius: 20px;
+        border: 2px solid #e53935;
+        cursor: pointer;
+        transition: 0.25s;
+    }
+
+        .settings-switch .settings-slider::before {
+            content: "";
+            width: 14px;
+            height: 14px;
+            background: #e53935;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 1px;
+            transform: translateY(-50%);
+            transition: 0.25s;
+        }
+
+    /* ON state */
+    .settings-switch input:checked + .settings-slider {
+        background: #e53935;
+    }
+
+        .settings-switch input:checked + .settings-slider::before {
+            transform: translate(16px, -50%);
+            background: #fff;
+        }
+
+
+
+
+
+
+/* ----------------------- */
+/* LEFT SIDEBAR            */
+/* ----------------------- */
+
+.left-sidebar {
+    background: #fff;
+    border: 2px solid #e53935;
+    border-radius: 22px;
+    padding: 25px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.sidebar-title {
+    text-align: center;
+    font-weight: 600;
+    font-size: 17px;
+    color: #e53935;
+}
+
+.search-wrapper {
+    width: 100%;
+    position: relative;
+}
+
+.search-input {
+    width: 100%;
+    padding: 10px 14px;
+    padding-right: 36px;
+    background: #fafafa;
+    border: 1px solid #ddd;
+    border-radius: 14px;
+    box-sizing: border-box;
+}
+
+.search-icon {
+    position: absolute;
+    right: 12px;
+    top: 9px;
+    font-size: 18px;
+    color: #e53935;
+    cursor: pointer;
+}
+
+.class-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-height: 220px;
+    overflow-y: auto;
+}
+
+    .class-list::-webkit-scrollbar {
+        display: none;
+    }
+
+.class-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.class-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.class-color {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+}
+
+.class-count {
+    background: white;
+    border: 2px solid #e53935;
+    color: #e53935;
+    padding: 3px 10px;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+.add-class-btn {
+    background: #e53935;
+    color: white;
+    padding: 10px 0;
+    border-radius: 20px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.options-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.option-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+    .option-row input[type="checkbox"] {
+        transform: scale(1.2);
+        cursor: pointer;
+    }
+* {
+    box-sizing: border-box;
+}
+
+
+/* ----------------------- */
+/* RIGHT SIDEBAR           */
+/* ----------------------- */
+
+.right-sidebar {
+    background: #fff;
+    border: 2px solid #e53935;
+    border-radius: 22px;
+    padding: 20px 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* 🔥 evenly distribute space */
+    box-sizing: border-box;
+}
+
+.actions-list {
+    margin-top: auto; /* pushes actions to bottom */
+}
+
+.left-sidebar, .right-sidebar {
+    align-self: start;
+}
+
+
+.property-title {
+    color: #e53935;
+    text-align: center;
+    font-weight: 600;
+    font-size: 17px;
+}
+
+/* ------------------------------ */
+/* FINAL Coordinates + Size Layout */
+/* ------------------------------ */
+
+.coord-row {
+    display: flex;
+    align-items: center;
+    gap: 20px; /* X–Y spacing */
+}
+
+.coord-pair {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #e53935;
+    font-weight: 600;
+}
+
+    .coord-pair input,
+    .coord-row input {
+        width: 60px;
+        padding: 5px;
+        border-radius: 6px;
+        border: 1px solid #ddd;
+    }
+
+.coord-row span {
+    color: #e53935;
+    font-weight: 600;
+    margin-right: 4px;
+}
+
+/* --------------------------- */
+/* ACTION BUTTONS              */
+/* --------------------------- */
+
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+
+
+.action-btn {
+    padding: 10px;
+    border: 2px solid #e53935 !important;
+    border-radius: 12px;
+    background: white !important;
+    color: #e53935 !important;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+}
+
+    .action-btn.delete {
+        background: #e53935 !important;
+        color: white !important;
+    }
+
+
+
+
+/* PREV & NEXT BUTTONS */
+.strip-nav-btn {
+    background: none;
+    border: none;
+    font-size: 16px;
+    color: #993333;
+    cursor: pointer;
+    padding: 0 10px;
+}
+
+    /* Remove scrollbars */
+    .frame-thumbnails::-webkit-scrollbar {
+        height: 0;
+    }
+
+
+    /* ACTIVE THUMB */
+    .thumb.active {
+        border-color: #e57373;
+        background: #ffecec;
+    }
+
+    /* IMAGE INSIDE THUMB */
+    .thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+
+.search-input {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box; /* <-- IMPORTANT FIX */
+}
+
+.search-wrapper {
+    width: 100%;
+    overflow: hidden; /* prevents visual overflow */
+}
+
+.class-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+    max-height: 220px; /* fits ~5 items */
+    overflow-y: auto; /* scrollable */
+    padding-right: 5px;
+}
+
+    /* Hide scrollbar — Chrome, Edge, Safari */
+    .class-list::-webkit-scrollbar {
+        display: none;
+    }
+
+/* Hide scrollbar — Firefox */
+.class-list {
+    scrollbar-width: none;
+}
+
+.option-row {
+    display: flex;
+    justify-content: space-between; /* pushes text left, checkbox right */
+    align-items: center;
+    font-size: 14px;
+    color: #333;
+}
+
+    .option-row input[type="checkbox"] {
+        transform: scale(1.2); /* make checkbox nicer */
+        cursor: pointer;
+    }
+
+/* -------------------------- */
+/* SMALL RED TOGGLE SWITCH   */
+/* -------------------------- */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 34px;
+    height: 18px;
+}
+
+    /* Hide default checkbox */
+    .toggle-switch input {
+        display: none;
+    }
+
+/* Background track */
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #ffffff; /* white OFF background */
+    border: 2px solid #e53935; /* red border ALWAYS */
+    border-radius: 20px;
+    transition: 0.25s ease;
+}
+
+    .slider::before {
+        content: "";
+        position: absolute;
+        width: 14px;
+        height: 14px;
+        left: 1px;
+        top: 50%;
+        transform: translateY(-50%); /* <-- centers perfectly */
+
+        background: #e53935;
+        border-radius: 50%;
+        transition: 0.25s ease;
+    }
+
+
+/* -------------------------- */
+/* ON STATE                   */
+/* -------------------------- */
+
+/* Track turns red */
+.toggle-switch input:checked + .slider {
+    background: #e53935;
+    border-color: #e53935;
+}
+
+    .toggle-switch input:checked + .slider::before {
+        transform: translate(16px, -50%); /* move right but keep centered */
+        background: #ffffff;
+    }
+
+
+
+/* Red themed checkbox */
+.options-section input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #e53935;
+    border-radius: 4px;
+    appearance: none; /* remove default style */
+    cursor: pointer;
+    background: white;
+    margin-left: 6px;
+    position: relative;
+}
+
+    /* Checkmark when selected */
+    .options-section input[type="checkbox"]:checked {
+        background: #e53935;
+        border-color: #e53935;
+    }
+
+        /* White ✓ icon */
+        .options-section input[type="checkbox"]:checked::after {
+            content: "✔";
+            font-size: 10px;
+            color: white;
+            position: absolute;
+            left: 2px;
+            top: -1px;
+        }
+
+/* Row like: Coordinates:  X [ ]   Y [ ] */
+.property-row {
+    display: flex;
+    flex-direction: column; /* stack label on top */
+    gap: 6px;
+    margin-bottom: 18px;
+}
+
+/* "Coordinates:" / "Size:" text */
+.prop-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #e53935;
+}
+
+.prop-fields {
+    display: flex;
+    flex-wrap: wrap; /* allow wrapping inside box */
+    gap: 14px;
+}
+
+.coord-field {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.coord-label {
+    color: #e53935;
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.coord-field input {
+    width: 60px;
+    padding: 5px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 13px;
+}
+
+/* ACTIONS TITLE */
+.actions-title {
+    text-align: center;
+    color: #e53935;
+    font-weight: 600;
+    margin-bottom: 10px;
+    margin-top: 15px;
+    font-size: 15px;
+}
+
+/* LIST WRAPPER */
+.actions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* SMALL BUTTON STYLE (Figma-like) */
+.action-btn.small {
+    padding: px 0;
+    width: 100%;
+    border-radius: 20px;
+    border: 2px solid #e53935;
+    background: #ffffff;
+    color: #e53935;
+    font-weight: 600;
+    font-size: 10px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+}
+
+    /* DELETE BUTTON */
+    .action-btn.small.delete {
+        background: #e53935;
+        color: white;
+        border-color: #e53935;
+    }
+
+/* ICON */
+.action-icon {
+    font-size: 14px;
+    display: inline-block;
+}
+
+/* ----------------------- */
+/* CENTER CANVAS           */
+/* ----------------------- */
+
+.canvas-wrapper {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+
+/* MAIN IMAGE AREA (TOP PART of the frame) */
+.image-canvas {
+    background: #ffffff;
+    border: 2px solid #e53935;
+    border-bottom: none; /* REMOVE bottom so nav connects cleanly */
+    border-radius: 20px 20px 0 0; /* ONLY top corners */
+    width: calc(100% - 20px); /* fits inside grid padding */
+    margin: 0 auto;
+    height: 320px; /* your total height */
+    padding: 20px; /* inner spacing for image */
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+
+/* IMAGE INSIDE */
+.label-image {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+
+/* IMAGE WRAPPER (keeps image centered) */
+.image-wrapper {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+.left-sidebar,
+.right-sidebar,
+.image-canvas {
+    height: 100%; /* equal height relative to .label-content */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+
+
+
+
+/* BOTTOM NAVIGATION BAR */
+.image-nav {
+    width: calc(100% - 20px); /* Align with image-canvas width */
+    margin: 0 auto;
+    height: 55px;
+    background: #fce6e6;
+    border: 2px solid #e53935;
+    border-top: none; /* connects smoothly to image-canvas */
+    border-radius: 0 0 20px 20px; /* ONLY bottom corners */
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 30px;
+}
+
+
+/* NAV BUTTONS */
+.nav-btn {
+    background: none;
+    border: none;
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+    .nav-btn:hover {
+        color: #e53935;
+    }
+
+.arrow-left {
+    margin-right: 6px; /* space between arrow + text */
+    display: inline-block;
+}
+
+.arrow-right {
+    margin-left: 6px;
+    display: inline-block;
+}
+.frame-strip {
+    display: flex;
+    order: 2;
+    justify-content: space-between; /* pushes prev/next to edges */
+    align-items: center;
+    background: #ffeaea;
+    padding: 20px 40px;
+    border-top: 2px solid #e53935;
+    border-radius: 0 0 22px 22px;
+    gap: 30px;
+    width: 100%; /* make sure it fills horizontally */
+    box-sizing: border-box;
+}
+
+.frame-thumbnails {
+    flex: 1; /* fills space between prev/next */
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    justify-content: space-between; /* distribute frames evenly */
+}
+
+
+    .frame-thumbnails img {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 10px;
+        border: 2px solid transparent;
+        transition: 0.2s;
+    }
+
+        .frame-thumbnails img.active {
+            border-color: #e53935;
+        }
+
+        .frame-thumbnails img:hover {
+            transform: scale(1.03);
+        }
+
+.frame-nav {
+    background: none;
+    color: #e53935;
+    border: none;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+}
+/* move frame counter to the top */
+.frame-counter {
+    order: 1; /* 👈 move above strip */
+    margin-bottom: 6px;
+    color: #e53935;
+    font-weight: 500;
+}
+/* Buttons */
+.strip-nav-btn {
+    background: none;
+    border: none;
+    color: #e53935;
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.frame-thumbnails img {
+    width: 60px; /* smaller thumbs = more fit on one line */
+    height: 60px;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
+.frame-strip {
+    padding: 10px 20px; /* less padding so more space for frames */
+}
+
+.frame-thumbnails {
+    gap: 8px; /* tighter gap between frames */
+}
+
+.thumb img {
+    width: 55px;
+    height: 55px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    transition: 0.2s;
+}
+
+    .thumb img.highlighted {
+        border: 2px solid #e53935;
+        box-shadow: 0 0 8px rgba(229, 57, 53, 0.5);
+    }
+
+
+button.export-btn {
+    background: #e53935 !important;
+    color: white !important;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    padding: 8px 18px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+    button.export-btn:hover {
+        background: #b32c2b !important;
+    }
+
+.active-class-card {
+    border: 2px solid #e53935;
+    border-radius: 14px;
+    padding: 10px 14px;
+    background: #fff7f7;
+    margin-bottom: 18px;
+}
+
+.active-class-title {
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #e53935;
+    font-size: 16px;
+}
+
+.active-class-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.active-class-color {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 2px #ccc;
+}
+
+.active-class-details {
+    display: flex;
+    flex-direction: column;
+    font-size: 14px;
+}
+
+.active-class-name {
+    font-weight: 600;
+}
+
+.active-class-shortcut {
+    font-size: 12px;
+    color: #757575;
+}

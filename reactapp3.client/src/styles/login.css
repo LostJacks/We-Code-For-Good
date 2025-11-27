@@ -1,32 +1,69 @@
 @import url('https://fonts.googleapis.com/css2?family=Raleway:wght@400;700;900&display=swap');
 
+/* prevent any page scrolling (no horizontal or vertical scroll) */
+html,
+body {
+    height: 100%;
+    overflow: hidden;
+}
+
+/* how much of the auth box to hide off the left side; adjust this value (px) as needed */
+:root {
+    --auth-hide-left: 220px;
+}
+
+/* Make the login page fill the viewport and center the auth box */
+.login-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+}
+
 .auth-box {
-    /* Responsive container: cap at original design width but shrink on smaller viewports */
-    width: min(1097px, 92vw);
-    min-width: 1097px;
-    min-height: 735px;
-    margin: 32px auto;
-    padding: 18px;
+    width: 975px;
+    height: 635px;
+    /* ensure auth-box never forces page scroll */
+    max-width: calc(100vw - 48px);
+    max-height: calc(100vh - 48px);
     box-sizing: border-box;
+    position: relative;
+    z-index: 2;
+    transform: translateX(calc(var(--auth-hide-left) * -0.5));
+    overflow: hidden;
+    /* keep internal overflow clipped so page doesn't scroll */
 }
+
 .auth-box {
-border-radius: 20px;
-border: 1px solid rgba(255, 255, 255, 0.30);
-background: rgba(255, 255, 255, 0.16);
-box-shadow: 0 8px 24px 23px rgba(0, 0, 0, 0.25);
-backdrop-filter: blur(12.5px);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.30);
+    background: rgba(255, 255, 255, 0.16);
+    box-shadow: 0 8px 24px 23px rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(12.5px);
 }
+
 .body {
-    width: 1280px;
-height: 832px;}
+
+    width: 100%;
+    max-width: 1280px;
+    height: auto;
+    max-height: calc(100vh - 48px);
+    position: relative;
+    overflow: visible;
+    background: rgba(255, 255, 255, 0.3);
+}
+
+
+/* ...existing code... */
 
 .welcome-back {
     width: auto;
     color: #E74026;
     display: block;
-    margin-left: 60px;
+    margin-left: 0;
     font-family: 'Raleway', sans-serif;
-    font-size: clamp(28px, 4vw, 50px);
+    font-size: clamp(28px, 4vw, 40px);
     font-style: normal;
     font-weight: 700;
     line-height: normal;
@@ -34,47 +71,24 @@ height: 832px;}
 }
 
 .no-account {
-color: #5A5450;
+    color: #5A5450;
 
-font-family: 'Raleway', sans-serif;
-font-size: 20px;
-font-style: normal;
-font-weight: 500;
-line-height: normal;
-margin-top: 23px;
-margin-left: 60px;
-display: inline-block;
-vertical-align: top;
+    font-family: 'Raleway', sans-serif;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: normal;
+    margin-top: 23px;
+    margin-left: 0;
+    display: inline-block;
+    vertical-align: top;
 }
-.register{
-    color: #E74026;
 
-font-family: 'Raleway', sans-serif;
-font-size: 20px;
-font-style: normal;
-font-weight: 500;
-line-height: normal;
-margin-top: 23px;
-margin-left: 4px; 
-display: inline-block;
-vertical-align: top;
-}
+
+
 .email-box {
-    width: min(519px, 80%);
-    height: 79px;
-    flex-shrink: 0;
-    border-radius: 24px;
-    border: 1px solid #E74026;
-    background: #F8F8FF;
-    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-    backdrop-filter: blur(8px);
-    margin-top: 28px;
-    margin-left: 4%;
-    position: relative; 
-}
-.password-box{
-    width: min(519px, 80%);
-    height: 78px;
+    width: min(475px, 80%);
+    height: 68px;
     flex-shrink: 0;
     border-radius: 24px;
     border: 1px solid #E74026;
@@ -82,103 +96,143 @@ vertical-align: top;
     box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.06);
     backdrop-filter: blur(8px);
     margin-top: 18px;
-    margin-left: 4%;
+    margin-left: 0;
+    position: relative;
+}
+
+.password-box {
+    width: min(475px, 80%);
+    height: 68px;
+    flex-shrink: 0;
+    border-radius: 24px;
+    border: 1px solid #E74026;
+    background: #F8F8FF;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    backdrop-filter: blur(8px);
+    margin-top: 18px;
+    margin-left: 0;
     position: relative;
 }
 
 .email-text {
     color: #666;
-text-align: left; 
-font-family: Raleway ,sans-serif;   
-font-size: 15px;
-font-style: normal;
-font-weight: 400;
-line-height: normal;
-position: absolute;
-left: 16px; 
-top: 7px;   
-display: block;
+    text-align: left;
+    font-family: Raleway, sans-serif;
+    font-size: 15px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+    position: absolute;
+    left: 16px;
+    top: 7px;
+    display: block;
 }
 
-.email-icon{
+.email-icon {
     width: 27.75px;
-height: 21.583px;
-flex-shrink: 0;
-fill: #E74026;
-right: 25px;
-top: 28px;
-position: absolute;
-display: block;
+    height: 21.583px;
+    flex-shrink: 0;
+    fill: #E74026;
+    right: 25px;
+    top: 28px;
+    position: absolute;
+    display: block;
 }
 
-.email-input{
-    display: flex;
-    width: calc(100% - 70px); /* leave room for icon */
+.register {
+    color: #E74026;
+    text-align: center;
+    font-family: Raleway, sans-serif;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: normal;
+    border: none;
+    background-color: transparent;
+    margin-top: 13px;
+    cursor: pointer;
+
+}
+
+.email-input {
+    display: inline-block;
+    width: 400px;
     height: 35px;
     flex-direction: column;
     justify-content: center;
     flex-shrink: 0;
-    color: rgba(46, 46, 46, 0.00);
-    font-family: Raleway;
-    font-size: 18px;
+    background: transparent;
+    font-family: Raleway, sans-serif;
+    font-size: 20px;
     font-style: normal;
     font-weight: 500;
     line-height: normal;
     letter-spacing: 0.2px;
-    display: block;
-    left: 18px;
-    top: 29px;
-    position: absolute;
+    margin-top: 29px;
+    margin-left: 18px;
+    border: none;
+    outline: none;
+
+    /* new: ensure text and caret are visible and input sits above decorations */
+    color: #111;
+    /* readable text color */
+    caret-color: #E74026;
+    position: relative;
+    z-index: 6;
 }
 
-/* Password box inner elements: mirror email positioning (16px left, 7px top for label) */
+
+
 .password-text {
     color: #666;
-text-align: left;
-font-family: Raleway, sans-serif;
-font-size: 15px;
-font-style: normal;
-font-weight: 400;
-line-height: normal;
-position: absolute;
-left: 16px;
-top: 7px;   
-display: block;
+    text-align: left;
+    font-family: Raleway, sans-serif;
+    font-size: 15px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+    position: absolute;
+    left: 16px;
+    top: 7px;
+    display: block;
 }
 
-.password-icon{
+.password-icon {
     width: 27.75px;
-height: 21.583px;
-flex-shrink: 0;
-fill: #E74026;
-right: 25px;
-top: 28px;
-position: absolute;
-display: block;
+    height: 21.583px;
+    flex-shrink: 0;
+    fill: #E74026;
+    right: 25px;
+    top: 28px;
+    position: absolute;
+    display: block;
 }
 
 .password-input {
-    display: flex;
-    width: calc(100% - 70px); /* leave room for toggle button */
+    display: inline-block;
+    width: 400px;
     height: 35px;
     flex-direction: column;
     justify-content: center;
     flex-shrink: 0;
-    color: #000;
-    background: #fff;
-    border: none;
-    outline: none;
+    background: transparent;
     font-family: Raleway, sans-serif;
-    font-size: 18px;
+    font-size: 20px;
     font-style: normal;
     font-weight: 500;
     line-height: normal;
     letter-spacing: 0.2px;
-    display: block;
-    left: 18px;
-    top: 29px;
-    position: absolute;
-    box-shadow: none;
+    margin-top: 29px;
+    margin-left: 18px;
+    border: none;
+    outline: none;
+
+    /* new: ensure password text is visible and input sits above decorations */
+    color: #111;
+    /* readable text color (will show bullets for type="password") */
+    caret-color: #E74026;
+    position: relative;
+    z-index: 6;
 }
 
 /* Toggle button that sits over the password input on the right */
@@ -193,13 +247,314 @@ display: block;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 28px;
-    height: 22px;
+    width: 32px;
+    height: 28px;
     cursor: pointer;
     z-index: 3;
 }
 
+/* draw a simple diagonal slash overlay when password is hidden */
+.password-toggle-btn.is-hidden::after {
+    content: "";
+    position: absolute;
+    width: 2px;
+    height: 40%;
+    background: #E74026;
+    right: 8px;
+    top: 18%;
+    transform: rotate(45deg);
+    border-radius: 1px;
+    pointer-events: none;
+}
+
+/* disabled behaviour kept (if needed elsewhere) */
 .password-toggle-btn[disabled] {
     cursor: default;
     opacity: 0.5;
+}
+
+.Rope {
+    position: absolute;
+    right: clamp(12px, 6vw, calc(var(--auth-hide-left) - 12px));
+    top: clamp(20px, 10vh, 120px);
+    transform: rotate(26.165deg);
+    z-index: 5;
+    pointer-events: none;
+    width: clamp(140px, 22vw, 288.854px);
+    height: auto;
+    max-height: calc(100vh - 160px);
+    aspect-ratio: 288.85/368.17;
+    top: -186px;
+    right: 479px;
+}
+
+.circle {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid black;
+    background-color: transparent;
+    position: absolute;
+    top: 29px;
+    right: 14px;
+    z-index: 4;
+}
+
+.login-button-box {
+    margin-top: 55px;
+    width: 475px;
+    height: 61px;
+    flex-shrink: 0;
+    border-radius: 48px;
+    border: 1px solid #E74026;
+    background: #E74026;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    backdrop-filter: blur(8px);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.login-button {
+    color: #F8F8FF;
+    text-align: center;
+    font-family: Raleway, sans-serif;
+    font-size: 24px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: normal;
+    background-color: transparent;
+    border-radius: 48px;
+    border: none;
+    width: 519px;
+    height: 61px;
+}
+
+.diagram {
+    position: absolute;
+    right: clamp(12px, 3vw, 40px);
+    top: 50%;
+    transform: translateY(-50%);
+    width: clamp(180px, 35vw, 500px);
+    height: auto;
+    max-height: calc(100vh - 160px);
+    z-index: 1;
+    pointer-events: none;
+}
+
+.box {
+    position: absolute;
+    border: 3px solid #E74026;
+    background: rgba(255, 255, 255, 0.0);
+}
+
+
+.box-labeling {
+    top: 40px;
+    left: 40px;
+    width: 100px;
+    height: 208px;
+    z-index: 1;
+}
+
+
+.box-tool {
+    top: 134px;
+    left: 115px;
+    width: 200px;
+    height: 208px;
+    z-index: 2;
+}
+
+.tab {
+    position: absolute;
+    top: -28px;
+    left: -3px;
+    background: #E74026;
+    color: #fff;
+    font-size: 12px;
+    padding: 4px 10px;
+}
+
+.User-login {
+    position: relative;
+    left: 150px;
+    top: 50px;
+}
+
+.Rope2 {
+    position: fixed;
+    top: -52px;
+    right: 400px;
+    width: 193.545px;
+    height: 246.688px;
+    transform: rotate(-11.672deg);
+    flex-shrink: 0;
+    aspect-ratio: 193.55/246.69;
+    z-index: 4;
+}
+
+.LabelCard {
+    width: 744px;
+    height: 800px;
+    transform: rotate(18.229deg);
+    flex-shrink: 0;
+    display: block;
+    position: fixed;
+    right: -34px;
+    top: -125px;
+    z-index: 3;
+}
+
+.background-image {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    object-fit: cover;
+    z-index: 0;
+
+
+    opacity: 0.95;
+    filter: blur(3px) saturate(0.99);
+    transform: scale(1.02);
+    pointer-events: none;
+
+}
+
+.create-new-account {
+    width: auto;
+    color: #E74026;
+    display: block;
+    margin-left: 0;
+    font-family: 'Raleway', sans-serif;
+    font-size: clamp(28px, 4vw, 40px);
+    font-style: normal;
+    font-weight: 700;
+    line-height: normal;
+    margin-top: 40px;
+}
+
+.already-have-account {
+    color: #5A5450;
+
+    font-family: 'Raleway', sans-serif;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: normal;
+    margin-top: 23px;
+    margin-left: 0;
+    display: inline-block;
+    vertical-align: top;
+}
+
+.login {
+    color: #E74026;
+    text-align: center;
+    font-family: Raleway, sans-serif;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: normal;
+    border: none;
+    background-color: transparent;
+    margin-top: 13px;
+    cursor: pointer;
+}
+
+.register-button-box {
+    margin-top: 18px;
+    width: min(475px, 80%);
+    height: 61px;
+    flex-shrink: 0;
+    border-radius: 48px;
+    border: 1px solid #E74026;
+    background: #E74026;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    backdrop-filter: blur(8px);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.register-button {
+    color: #F8F8FF;
+    text-align: center;
+    font-family: Raleway, sans-serif;
+    font-size: 24px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: normal;
+    background-color: transparent;
+    border-radius: 48px;
+    border: none;
+    width: 519px;
+    height: 61px;
+}
+
+.name-box {
+    display: inline-block;
+    width: 240px;
+    height: 68px;
+    border-radius: 24px;
+    border: 1px solid #E74026;
+    background: #F8F8FF;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    margin-top: -13px;
+    margin-left: 0;
+    position: relative;
+    vertical-align: top;
+    margin-right: 32px;
+}
+
+.small-input {
+    width: 220px;
+    height: 68px;
+}
+
+.name-text {
+    color: #666;
+    text-align: left;
+    font-family: Raleway, sans-serif;
+    font-size: 15px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+    position: absolute;
+    left: 16px;
+    top: 7px;
+}
+
+.name-icon {
+    position: absolute;
+    left: 16px;
+    top: 32px;
+    color: #E74026;
+    font-size: 22px;
+    display: flex;
+    align-items: center;
+}
+
+.name-input {
+    width: 180px;
+    height: 36px;
+    border: none;
+    background: transparent;
+    font-size: 18px;
+    font-family: Raleway, sans-serif;
+    color: #333;
+    padding-left: 40px;
+    margin-top: 28px;
+    outline: none;
+    caret-color: #E74026;
+}
+
+.material-symbols-outlined {
+    font-family: 'Material Symbols Outlined', sans-serif;
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    font-size: 22px;
+    user-select: none;
 }

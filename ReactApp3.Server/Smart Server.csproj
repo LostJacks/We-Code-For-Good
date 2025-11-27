@@ -7,30 +7,35 @@
 		<SpaRoot>..\reactapp3.client</SpaRoot>
 		<SpaProxyLaunchCommand>npm run dev</SpaProxyLaunchCommand>
 		<SpaProxyServerUrl>https://localhost:55106</SpaProxyServerUrl>
+		<UserSecretsId>0dbb1586-7d97-4863-836f-2c1715452c6f</UserSecretsId>
 	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.11" />
-    <PackageReference Include="Microsoft.AspNetCore.SpaProxy" Version="8.0.11" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.11" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.11" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.11" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.11">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.6" />
-  </ItemGroup>
+	<!-- ✅ Packages -->
+	<ItemGroup>
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.11" />
+		<PackageReference Include="Microsoft.AspNetCore.SpaProxy" Version="8.0.11" />
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.6" />
 
-	<!-- ✅ Must be its own ItemGroup -->
+		<!-- ✅ Keep EF Core if you plan to use migrations or testing -->
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.11" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.11" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.11" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.11">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
+	<!-- ✅ Framework reference -->
 	<ItemGroup>
 		<FrameworkReference Include="Microsoft.AspNetCore.App" />
 	</ItemGroup>
+
+	<!-- ✅ Project references -->
 	<ItemGroup>
-	  <Folder Include="Models\" />
-	</ItemGroup>
-	<ItemGroup>
-	  <ProjectReference Include="..\LabelingTool.BLL\LabelingTool.BLL.csproj" />
+		<ProjectReference Include="..\LabelingTool.BLL\LabelingTool.BLL.csproj" />
+		<ProjectReference Include="..\LabelingTool.DAL\LabelingTool.DAL.csproj" />
+		<ProjectReference Include="..\Model\Model.csproj" />
 	</ItemGroup>
 
 </Project>
