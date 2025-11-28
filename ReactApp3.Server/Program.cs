@@ -1,10 +1,14 @@
-using System;
+﻿using System;
 using System.Text;
+using LabelingTool.BLL.ExportServices;
+using LabelingTool.DAL.GeneralRepositories;
 using LabelingTool.BLL.Interfaces;
 using LabelingTool.BLL.Services;
+using LabelingTool.BLL.BBServices;
 using LabelingTool.DAL;
 using LabelingTool.DAL.Interfaces;
 using LabelingTool.DAL.Repositories;
+using LabelingTool.DAL.BBRepositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Extensions.Logging;
@@ -12,10 +16,12 @@ using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
+// =============================================================
+// 🔐 JWT CONFIGURATION
+// =============================================================
 var signingKeyString = builder.Configuration["Jwt:SigningKey"];
 if (string.IsNullOrWhiteSpace(signingKeyString))
-    throw new InvalidOperationException("Configuration 'Jwt:SigningKey' is missing or empty. Add it to appsettings.json or Secret Manager.");
+    throw new InvalidOperationException("Configuration 'Jwt:SigningKey' is missing or empty.");
 
 var issuer = builder.Configuration["Jwt:Issuer"];
 if (string.IsNullOrWhiteSpace(issuer))
@@ -27,53 +33,101 @@ if (string.IsNullOrWhiteSpace(audience))
 
 var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKeyString));
 
-builder.Services.AddCors(o => o.AddPolicy("spa", options =>
-    options.WithOrigins(
-        "http://localhost:5081",
-        "https://localhost:55107", "http://localhost:55107",
-        "https://localhost:55109", "http://localhost:55109",
-        "https://localhost:55106", "http://localhost:55106"
-    )
-     .AllowAnyHeader().AllowAnyMethod().AllowCredentials()));
-
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-.AddJwtBearer(o =>
-{
-    o.TokenValidationParameters = new()
+    .AddJwtBearer(o =>
     {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = issuer,
-        ValidAudience = audience,
-        IssuerSigningKey = signingKey,
-        ClockSkew = TimeSpan.Zero
-    };
+        o.TokenValidationParameters = new()
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = issuer,
+            ValidAudience = audience,
+            IssuerSigningKey = signingKey,
+            ClockSkew = TimeSpan.Zero
+        };
+    });
+
+// =============================================================
+// 🌐 CORS CONFIGURATION
+// =============================================================
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowReact", policy =>
+    {
+        policy.WithOrigins(
+                "https://localhost:55106", // Visual Studio React proxy
+                "http://localhost:55106",  // Non-HTTPS fallback
+                "http://localhost:5173",   // Vite dev server
+                "http://localhost:3000"    // Standard React server
+            )
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
 });
 
-builder.Services.AddAuthorization();
-builder.Services.AddScoped<ITokenService, TokenService>();
+// =============================================================
+// 🗄️ DATABASE + CORE SERVICES
+// =============================================================
 builder.Services.AddSingleton<Database>(sp =>
 {
-	var config = sp.GetService<IConfiguration>();
+    var config = sp.GetService<IConfiguration>();
     var connectionString = config.GetConnectionString("LabellingDb");
-	return new Database(connectionString!);
+    return new Database(connectionString!);
 });
 
+// =============================================================
+// 🧠 NORMAL SERVICES (Auth, Users, Projects)
+// =============================================================
+builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IPasswordHasher<Model.AppUser>, PasswordHasher<Model.AppUser>>();
-builder.Services.AddScoped<IProjectsRepository, ProjectRepository>();
+builder.Services.AddScoped<IProjectsRepository, LabelingTool.DAL.Repositories.ProjectRepository>();
 builder.Services.AddScoped<IProjectsService, ProjectsService>();
+builder.Services.AddScoped<IPasswordHasher<Model.AppUser>, PasswordHasher<Model.AppUser>>();
+builder.Services.AddScoped<IMediaRepository, MediaRepository>();
+builder.Services.AddScoped<ILabelClassRepository, LabelClassRepository>();
+builder.Services.AddScoped<IProjectRepository, LabelingTool.DAL.GeneralRepositories.ProjectRepository>();
 
+// =============================================================
+// 🟩 BOUNDING BOX SERVICES
+// =============================================================
+builder.Services.AddScoped<IBoundingBoxRepository, BoundingBoxRepository>();
+builder.Services.AddScoped<IBoundingBoxService, BoundingBoxService>();
+builder.Services.AddScoped<IYoloExportService, YoloExportService>();
+
+// =============================================================
+// 📦 CONTROLLERS + SWAGGER
+// =============================================================
 builder.Services.AddControllers()
-    .AddJsonOptions(o => o.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase);
+    .AddJsonOptions(o =>
+        o.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+    );
 
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+builder.Services.AddAuthorization();
+
+// =============================================================
+// 🚀 APP PIPELINE
+// =============================================================
 var app = builder.Build();
 
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
 app.UseHttpsRedirection();
-app.UseCors("spa");
+
+// ✅ CORS must be before authentication
+app.UseCors("AllowReact");
+
 app.UseAuthentication();
 app.UseAuthorization();
+
 app.MapControllers();
+
 app.Run();
