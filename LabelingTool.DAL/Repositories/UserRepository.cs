@@ -24,9 +24,9 @@ namespace LabelingTool.DAL.Repositories
 			try
 			{
 				using var connection = _database.CreateOpenConnection();
-				var sql = @"SELECT user_id, name, email, password 
-                            FROM Users
-                            WHERE user_id = @id";
+				var sql = @"SELECT user_id, first_name, last_name, email, password 
+ FROM Users
+ WHERE user_id = @id";
 
 				using var command = new SqlCommand(sql, connection);
 				command.Parameters.AddWithValue("@id", id);
@@ -38,9 +38,11 @@ namespace LabelingTool.DAL.Repositories
 					return new AppUser
 					{
 						Id = reader.GetInt32(0),
-						UserName = reader.GetString(1),
-						Email = reader.GetString(2),
-						PasswordHash = reader.GetString(3)
+						UserName = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
+						FirstName = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+						LastName = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
+						Email = reader.IsDBNull(4) ? string.Empty : reader.GetString(4),
+						PasswordHash = reader.IsDBNull(5) ? string.Empty : reader.GetString(5)
 					};
 				}
 
@@ -61,9 +63,9 @@ namespace LabelingTool.DAL.Repositories
 			try
 			{
 				using var connection = _database.CreateOpenConnection();
-				var sql = @"SELECT user_id, username, email, password 
-                            FROM Users
-                            WHERE email = @Email";
+				var sql = @"SELECT user_id, first_name, last_name, email, password 
+ FROM Users
+ WHERE email = @Email";
 
 				using var command = new SqlCommand(sql, connection);
 				command.Parameters.AddWithValue("@Email", email);
@@ -75,9 +77,11 @@ namespace LabelingTool.DAL.Repositories
 					return new AppUser
 					{
 						Id = reader.GetInt32(0),
-						UserName = reader.GetString(1),
-						Email = reader.GetString(2),
-						PasswordHash = reader.GetString(3)
+						UserName = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
+						FirstName = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+						LastName = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
+						Email = reader.IsDBNull(4) ? string.Empty : reader.GetString(4),
+						PasswordHash = reader.IsDBNull(5) ? string.Empty : reader.GetString(5)
 					};
 				}
 
@@ -99,14 +103,14 @@ namespace LabelingTool.DAL.Repositories
 			{
 				using var connection = _database.CreateOpenConnection();
 				var sql = @"SELECT COUNT(1)
-                            FROM Users
-                            WHERE email = @Email";
+ FROM Users
+ WHERE email = @Email";
 
 				using var command = new SqlCommand(sql, connection);
 				command.Parameters.AddWithValue("@Email", email);
 
 				var result = (int)command.ExecuteScalar();
-				return result > 0;
+				return result >0;
 			}
 			catch (SqlException ex)
 			{
@@ -123,18 +127,39 @@ namespace LabelingTool.DAL.Repositories
 			try
 			{
 				using var connection = _database.CreateOpenConnection();
-				var sql = @"
-                    INSERT INTO Users (name, email, password)
-                    OUTPUT INSERTED.user_id
-                    VALUES (@Name, @Email, @Password)";
+				// Ensure we generate a non-null user_id for the table (table has no IDENTITY).
+				// Use a serializable transaction to avoid race conditions when computing the next id.
+				using var transaction = connection.BeginTransaction(System.Data.IsolationLevel.Serializable);
+				try
+				{
+					// Compute next id
+					int nextId;
+					using (var idCmd = new SqlCommand("SELECT ISNULL(MAX(user_id),0) +1 FROM Users", connection, transaction))
+					{
+						nextId = (int)idCmd.ExecuteScalar();
+					}
 
-				using var command = new SqlCommand(sql, connection);
-				command.Parameters.AddWithValue("@Name", user.UserName);
-				command.Parameters.AddWithValue("@Email", user.Email);
-				command.Parameters.AddWithValue("@Password", user.PasswordHash);
+					var sql = @"
+					INSERT INTO Users (username, first_name, last_name, email, password)
+					 OUTPUT INSERTED.user_id
+					 VALUES (@UserName, @FirstName, @LastName, @Email, @Password)";
 
-				var result = command.ExecuteScalar();
-				return (int)result;
+					using var command = new SqlCommand(sql, connection, transaction);
+					command.Parameters.AddWithValue("@UserName", user.UserName);
+					command.Parameters.AddWithValue("@FirstName", user.FirstName ?? (object)DBNull.Value);
+					command.Parameters.AddWithValue("@LastName", user.LastName ?? (object)DBNull.Value);
+					command.Parameters.AddWithValue("@Email", user.Email);
+					command.Parameters.AddWithValue("@Password", user.PasswordHash);
+
+					var result = command.ExecuteScalar();
+					transaction.Commit();
+					return (int)result!;
+				}
+				catch
+				{
+					transaction.Rollback();
+					throw;
+				}
 			}
 			catch (SqlException ex)
 			{
@@ -145,6 +170,7 @@ namespace LabelingTool.DAL.Repositories
 				throw new Exception("Unexpected error in UserRepository.Create(): " + ex.Message, ex);
 			}
 		}
+
 		public void SaveRefreshToken(int userId, string refreshToken, DateTime expiresAt)
 		{
 			try
@@ -152,9 +178,9 @@ namespace LabelingTool.DAL.Repositories
 				using var connection = _database.CreateOpenConnection();
 
 				var sql = @"UPDATE Users
-            SET refresh_token = @token,
-            refresh_token_expires_at = @expiresAt
-            WHERE user_id = @userId";
+ SET refresh_token = @token,
+ refresh_token_expires_at = @expiresAt
+ WHERE user_id = @userId";
 
 				using var command = new SqlCommand(sql, connection);
 				command.Parameters.AddWithValue("@token", refreshToken);
@@ -172,15 +198,16 @@ namespace LabelingTool.DAL.Repositories
 				throw new Exception("Unexpected error in UserRepository.SaveRefreshToken(): " + ex.Message, ex);
 			}
 		}
+
 		public AppUser? GetByRefreshToken(string refreshToken)
 		{
 			try
 			{
 				using var connection = _database.CreateOpenConnection();
 
-				var sql = @"SELECT user_id, name, email, password, refresh_token_expires_at
-            FROM Users
-            WHERE refresh_token = @token";
+				var sql = @"SELECT user_id, first_name, last_name, email, password, refresh_token_expires_at
+ FROM Users
+ WHERE refresh_token = @token";
 
 				using var command = new SqlCommand(sql, connection);
 				command.Parameters.AddWithValue("@token", refreshToken);
@@ -189,7 +216,7 @@ namespace LabelingTool.DAL.Repositories
 
 				if (reader.Read())
 				{
-					var expiresAt = reader.IsDBNull(4) ? (DateTime?)null : reader.GetDateTime(4);
+					var expiresAt = reader.IsDBNull(6) ? (DateTime?)null : reader.GetDateTime(6);
 
 					if (expiresAt.HasValue && expiresAt.Value < DateTime.UtcNow)
 						return null;
@@ -197,9 +224,11 @@ namespace LabelingTool.DAL.Repositories
 					return new AppUser
 					{
 						Id = reader.GetInt32(0),
-						UserName = reader.GetString(1),
-						Email = reader.GetString(2),
-						PasswordHash = reader.GetString(3)
+						UserName = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
+						FirstName = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+						LastName = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
+						Email = reader.IsDBNull(4) ? string.Empty : reader.GetString(4),
+						PasswordHash = reader.IsDBNull(5) ? string.Empty : reader.GetString(5)
 					};
 				}
 

@@ -3,7 +3,7 @@ import "../styles/main.css";
 import { FaFolderOpen } from "react-icons/fa";
 
 // ✅ Automatically use your backend URL from .env
-const API_BASE = import.meta.env.VITE_API_URL || "https://localhost:7166";
+const API_BASE = import.meta.env.VITE_API_URL || "";
 
 export default function ProjectCard({ previewImage, title, createdAt }) {
     // ✅ Build the full image URL (frontend + backend separation fix)

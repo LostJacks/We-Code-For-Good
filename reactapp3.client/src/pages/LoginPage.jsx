@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import "../styles/main.css";
 import "../styles/login.css";
 
-const API_BASE = import.meta.env.VITE_API_URL || "https://localhost:7166";
+const API_BASE = import.meta.env.VITE_API_URL || "";
 
 export default function LoginPage() {
     const [showPassword, setShowPassword] = useState(false);

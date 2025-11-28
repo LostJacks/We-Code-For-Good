@@ -6,7 +6,7 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<SpaRoot>..\reactapp3.client</SpaRoot>
 		<SpaProxyLaunchCommand>npm run dev</SpaProxyLaunchCommand>
-		<SpaProxyServerUrl>https://localhost:55106</SpaProxyServerUrl>
+		<SpaProxyServerUrl>https://localhost:55107</SpaProxyServerUrl>
 	  <UserSecretsId>0dbb1586-7d97-4863-836f-2c1715452c6f</UserSecretsId>
   </PropertyGroup>
 

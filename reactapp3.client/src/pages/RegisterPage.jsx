@@ -9,10 +9,11 @@ import { useNavigate } from "react-router-dom";
 import "../styles/main.css";
 import "../styles/login.css";
 
-const API_BASE = import.meta.env.VITE_API_URL || "https://localhost:7166";
+const API_BASE = import.meta.env.VITE_API_URL || "";
 
 export default function RegisterPage() {
 
+    const [userName, setUserName] = useState("");
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
     const [email, setEmail] = useState("");
@@ -29,6 +30,7 @@ export default function RegisterPage() {
         try {
             
             const payload = {
+                userName,
                 firstName,
                 lastName,
                 email,
@@ -41,9 +43,10 @@ export default function RegisterPage() {
                 body: JSON.stringify(payload),
             });
             if (!res.ok) {
+                const raw = await res.text();
                 let txt;
-                try { txt = await res.json();} catch { txt = await res.text(); }
-                const msg = txt?.errors ? txt.errors.join (",") : txt || "Register failed";
+                try { txt = JSON.parse(raw); } catch { txt = raw; }
+                const msg = txt?.errors ? txt.errors.join(",") : txt || "Register failed";
                 throw new Error(msg);
             }
             const data = await res.json();
@@ -67,6 +70,7 @@ export default function RegisterPage() {
                         <div className="already-have-account">Already have an account?</div>
                         <button className="login" title="login" onClick={() => navigate("/login")}>Login</button>
                         <br /><br />
+                        <UserNameInput value={userName} onChange={e => setUserName(e.target.value)} />
                         <FirstNameInput value={firstName} onChange={e => setFirstName(e.target.value)} />
                         <LastNameInput value={lastName} onChange={e => setLastName(e.target.value)} />
                         <EmailInput value={email} onChange={e => setEmail(e.target.value)} />

@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect } from "react";
 import "@/styles/main.css";
 
-const API = import.meta.env.VITE_API_URL || "https://localhost:7166";
+const API = import.meta.env.VITE_API_URL || "";
 
 export default function NewProjectModal({ isOpen, onClose, onCreated }) {
     const [projectName, setProjectName] = useState("");

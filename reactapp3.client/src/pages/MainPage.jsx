@@ -11,7 +11,7 @@ export default function MainPage() {
     const [sortBy, setSortBy] = useState("az");
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    const API_BASE = import.meta.env.VITE_API_URL || "https://localhost:7166";
+    const API_BASE = import.meta.env.VITE_API_URL || "";
 
     // ✅ Fetch all projects from backend
     const fetchProjects = async () => {

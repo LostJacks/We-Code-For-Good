@@ -28,7 +28,12 @@ if (string.IsNullOrWhiteSpace(audience))
 var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKeyString));
 
 builder.Services.AddCors(o => o.AddPolicy("spa", options =>
-    options.WithOrigins("http://localhost:5173")
+    options.WithOrigins(
+        "http://localhost:5081",
+        "https://localhost:55107", "http://localhost:55107",
+        "https://localhost:55109", "http://localhost:55109",
+        "https://localhost:55106", "http://localhost:55106"
+    )
      .AllowAnyHeader().AllowAnyMethod().AllowCredentials()));
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

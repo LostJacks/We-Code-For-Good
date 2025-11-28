@@ -26,92 +26,106 @@ namespace Smart_Server.Controllers
 		[HttpPost("register")]
 		public ActionResult<AuthResponse> Register([FromBody] registerRequest request)
 		{
-			if (request == null)
-				return BadRequest("Request body is required.");
-
-			var errors = RegisterValidator.Validate(request);
-			if (errors.Count > 0)
-				return BadRequest(new { errors });
-
-			if (_userRepository.EmailExists(request.Email))
-				return BadRequest(new { errors = new[] { "Email is already in use." } });
-
-			var user = new AppUser
+			try
 			{
-				FirstName = request.FirstName,
-				LastName = request.LastName,
-				Email = request.Email,
-				UserName = request.Email
-			};
+				if (request == null)
+					return BadRequest("Request body is required.");
 
-			int newId = _userService.Register(user, request.Password);
-			user.Id = newId;
+				var errors = RegisterValidator.Validate(request);
+				if (errors.Count > 0)
+					return BadRequest(new { errors });
 
-			var accessToken = _tokenService.CreateToken(user);
-			var refreshToken = _tokenService.GenerateRefreshToken();
-			var expiresAt = DateTime.UtcNow.AddMinutes(30);
+				if (_userRepository.EmailExists(request.Email))
+					return BadRequest(new { errors = new[] { "Email is already in use." } });
 
-			_userRepository.SaveRefreshToken(user.Id, refreshToken, expiresAt);
-
-			var response = new AuthResponse
-			{
-				AccessToken = accessToken,
-				RefreshToken = refreshToken,
-				ExpiresAt = expiresAt,
-				User = new UserInfo
+				var user = new AppUser
 				{
-					Id = user.Id,
-					Email = user.Email,
-					FirstName = user.FirstName,
-					LastName = user.LastName,
-				}
-			};
+					FirstName = request.FirstName,
+					LastName = request.LastName,
+					Email = request.Email,
+					UserName = request.Email
+				};
 
-			return Ok(response);
+				int newId = _userService.Register(user, request.Password);
+				user.Id = newId;
+
+				var accessToken = _tokenService.CreateToken(user);
+				var refreshToken = _tokenService.GenerateRefreshToken();
+				var expiresAt = DateTime.UtcNow.AddMinutes(30);
+
+				_userRepository.SaveRefreshToken(user.Id, refreshToken, expiresAt);
+
+				var response = new AuthResponse
+				{
+					AccessToken = accessToken,
+					RefreshToken = refreshToken,
+					ExpiresAt = expiresAt,
+					User = new UserInfo
+					{
+						Id = user.Id,
+						Email = user.Email,
+						FirstName = user.FirstName,
+						LastName = user.LastName,
+					}
+				};
+
+				return Ok(response);
+			}
+			catch (Exception ex)
+			{
+				return StatusCode(500, "Register error: " + ex.Message);
+			}
 		}
 
 		[HttpPost("login")]
 		public ActionResult<AuthResponse> Login([FromBody] LoginRequestDTO request)
 		{
-			if (request == null ||
-				string.IsNullOrWhiteSpace(request.Email) ||
-				string.IsNullOrWhiteSpace(request.Password))
+			try
 			{
-				return BadRequest("Email and password are required.");
-			}
-
-			var user = _userRepository.GetByEmail(request.Email);
-			if (user == null)
-			{
-				return Unauthorized("Invalid email or password.");
-			}
-
-			if (!_userService.VerifyPassword(user, request.Password))
-			{
-				return Unauthorized("Invalid email or password.");
-			}
-
-			var accessToken = _tokenService.CreateToken(user);
-			var refreshToken = _tokenService.GenerateRefreshToken();
-			var expiresAt = DateTime.UtcNow.AddMinutes(30);
-
-			_userRepository.SaveRefreshToken(user.Id, refreshToken, expiresAt);
-
-			var response = new AuthResponse
-			{
-				AccessToken = accessToken,
-				RefreshToken = refreshToken,
-				ExpiresAt = expiresAt,
-				User = new UserInfo
+				if (request == null ||
+					string.IsNullOrWhiteSpace(request.Email) ||
+					string.IsNullOrWhiteSpace(request.Password))
 				{
-					Id = user.Id,
-					Email = user.Email,
-					FirstName = user.FirstName,
-					LastName = user.LastName
+					return BadRequest("Email and password are required.");
 				}
-			};
 
-			return Ok(response);
+				var user = _userRepository.GetByEmail(request.Email);
+				if (user == null)
+				{
+					return Unauthorized("Invalid email or password.");
+				}
+
+				if (!_userService.VerifyPassword(user, request.Password))
+				{
+					return Unauthorized("Invalid email or password.");
+				}
+
+				var accessToken = _tokenService.CreateToken(user);
+				var refreshToken = _tokenService.GenerateRefreshToken();
+				var expiresAt = DateTime.UtcNow.AddMinutes(30);
+
+				_userRepository.SaveRefreshToken(user.Id, refreshToken, expiresAt);
+
+				var response = new AuthResponse
+				{
+					AccessToken = accessToken,
+					RefreshToken = refreshToken,
+					ExpiresAt = expiresAt,
+					User = new UserInfo
+					{
+						Id = user.Id,
+						Email = user.Email,
+						FirstName = user.FirstName,
+						LastName = user.LastName
+					}
+				};
+
+				return Ok(response);
+			}
+			catch (Exception ex)
+			{
+				return StatusCode(500, "Login error: " + ex.Message);
+			}
 		}
 
 		[HttpPost("refresh")]
