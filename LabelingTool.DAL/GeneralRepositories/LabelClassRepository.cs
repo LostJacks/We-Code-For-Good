@@ -16,7 +16,6 @@ namespace LabelingTool.DAL.GeneralRepositories
         public LabelClassRepository(IConfiguration configuration)
         {
             var connectionString = configuration.GetConnectionString("DefaultConnection");
-
             if (string.IsNullOrEmpty(connectionString))
                 throw new InvalidOperationException("Connection string 'DefaultConnection' not found in appsettings.json");
 
@@ -26,31 +25,40 @@ namespace LabelingTool.DAL.GeneralRepositories
         public async Task<List<LabelClassDto>> GetAllAsync()
         {
             var classes = new List<LabelClassDto>();
-
-            using (var connection = new SqlConnection(_connectionString))
+            try
             {
-                await connection.OpenAsync();
-
-                var command = new SqlCommand(@"
-                    SELECT 
-                        labelclass_id,
-                        name,
-                        color
-                    FROM Labelclass
-                    ORDER BY labelclass_id", connection);
-
-                using (var reader = await command.ExecuteReaderAsync())
+                using (var connection = new SqlConnection(_connectionString))
                 {
-                    while (await reader.ReadAsync())
+                    await connection.OpenAsync();
+                    var command = new SqlCommand(@"
+                        SELECT
+                            [labelclass_id],
+                            [name],
+                            [color]
+                        FROM [Labelclass]
+                        ORDER BY [labelclass_id]", connection);
+
+                    using (var reader = await command.ExecuteReaderAsync())
                     {
-                        classes.Add(new LabelClassDto
+                        while (await reader.ReadAsync())
                         {
-                            LabelClassId = reader.GetInt32(0),
-                            Name = reader.GetString(1),
-                            Color = reader.GetString(2)
-                        });
+                            classes.Add(new LabelClassDto
+                            {
+                                LabelClassId = reader.GetInt32(0),
+                                Name = reader.GetString(1),
+                                Color = reader.GetString(2)
+                            });
+                        }
                     }
                 }
+            }
+            catch (SqlException ex)
+            {
+                throw new Exception("SQL error in GetAllAsync(): " + ex.Message, ex);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Unexpected error in GetAllAsync(): " + ex.Message, ex);
             }
 
             return classes;
@@ -58,32 +66,42 @@ namespace LabelingTool.DAL.GeneralRepositories
 
         public async Task<LabelClassDto?> GetByIdAsync(int labelClassId)
         {
-            using (var connection = new SqlConnection(_connectionString))
+            try
             {
-                await connection.OpenAsync();
-
-                var command = new SqlCommand(@"
-                    SELECT 
-                        labelclass_id,
-                        name,
-                        color
-                    FROM Labelclass
-                    WHERE labelclass_id = @LabelClassId", connection);
-
-                command.Parameters.AddWithValue("@LabelClassId", labelClassId);
-
-                using (var reader = await command.ExecuteReaderAsync())
+                using (var connection = new SqlConnection(_connectionString))
                 {
-                    if (await reader.ReadAsync())
+                    await connection.OpenAsync();
+                    var command = new SqlCommand(@"
+                        SELECT
+                            [labelclass_id],
+                            [name],
+                            [color]
+                        FROM [Labelclass]
+                        WHERE [labelclass_id] = @LabelClassId", connection);
+
+                    command.Parameters.AddWithValue("@LabelClassId", labelClassId);
+
+                    using (var reader = await command.ExecuteReaderAsync())
                     {
-                        return new LabelClassDto
+                        if (await reader.ReadAsync())
                         {
-                            LabelClassId = reader.GetInt32(0),
-                            Name = reader.GetString(1),
-                            Color = reader.GetString(2)
-                        };
+                            return new LabelClassDto
+                            {
+                                LabelClassId = reader.GetInt32(0),
+                                Name = reader.GetString(1),
+                                Color = reader.GetString(2)
+                            };
+                        }
                     }
                 }
+            }
+            catch (SqlException ex)
+            {
+                throw new Exception("SQL error in GetByIdAsync(): " + ex.Message, ex);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Unexpected error in GetByIdAsync(): " + ex.Message, ex);
             }
 
             return null;

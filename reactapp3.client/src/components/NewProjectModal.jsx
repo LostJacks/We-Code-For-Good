@@ -57,6 +57,13 @@ export default function NewProjectModal({ isOpen, onClose, onCreated }) {
         try {
             setLoading(true);
 
+            const token = localStorage.getItem('accessToken');
+            console.log('Token from localStorage:', token);
+            if (!token) {
+                alert('Please login first!');
+                return;
+            }
+
             // ✅ Step 1 — Create project (send correct DTO structure)
             const newProject = {
                 Title: projectName,
@@ -64,24 +71,41 @@ export default function NewProjectModal({ isOpen, onClose, onCreated }) {
                 Labels: labels, // ✅ matches backend DTO (List<string>)
             };
 
+            console.log('Request headers:', {  // ← Check headers
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            });
+
             const createRes = await fetch(`${API}/api/projects`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify(newProject),
             });
 
-            if (!createRes.ok) throw new Error("Failed to create project");
+            console.log('Response status:', createRes.status);  // ← Check status
+            console.log('Response:', createRes);
+
+            if (!createRes.ok) {
+                const errorText = await createRes.text();
+                throw new Error(`Failed to create project: ${errorText}`);
+            }
+
             const createdProject = await createRes.json();
+            console.log('✅ Project created:', createdProject);
 
             // ✅ Step 2 — Upload files & folders
             const allFiles = [...files, ...folderFiles];
             for (const file of allFiles) {
                 const formData = new FormData();
                 formData.append("file", file);
-                formData.append("projectId", createdProject.id);
+                formData.append("projectId", createdProject.projectId);
 
                 await fetch(`${API}/api/projects/upload`, {
                     method: "POST",
+                    headers: {'Authorization': `Bearer ${token}`},
                     body: formData,
                 });
             }

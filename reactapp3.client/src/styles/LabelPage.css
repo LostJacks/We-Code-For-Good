@@ -17,12 +17,12 @@ input, textarea, select {
 .label-page {
     display: flex;
     flex-direction: column;
-    min-height: 100vh; /* allows page to grow naturally */
+    height: 100vh; /* allows page to grow naturally */
     width: 100vw;
     background: #fafafa;
     margin: 0;
     padding: 0;
-    overflow-x: hidden; /* keep horizontal scroll hidden */
+    overflow: hidden; /* keep horizontal scroll hidden */
 }
 
 
@@ -50,7 +50,10 @@ input, textarea, select {
     gap: 40px;
     padding: 25px 40px;
     box-sizing: border-box;
+    overflow: hidden;
+    min-height: 0;
 }
+
 
 
 
@@ -947,4 +950,36 @@ button.export-btn {
 .active-class-shortcut {
     font-size: 12px;
     color: #757575;
+}
+
+.frame-strip-section {
+    flex-shrink: 0;
+    height: 80px; /* ← Increased */
+    overflow-x: auto;
+    overflow-y: hidden;
+    background: #fff;
+}
+
+.frame-counter {
+    padding: 4px 40px;
+    font-size: 12px;
+    color: #e53935;
+    font-weight: 600;
+    height: 20px; /* ← Add fixed height */
+}
+
+.frame-strip {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    padding: 4px 40px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    height: 60px; /* ← Fixed height for thumbnails */
+}
+
+.thumb {
+    flex-shrink: 0;
+    min-width: 50px;
+    height: 50px; /* ← Ensure thumbnails are visible */
 }

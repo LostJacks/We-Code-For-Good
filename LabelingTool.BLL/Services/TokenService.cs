@@ -24,9 +24,9 @@ namespace LabelingTool.BLL.Services
 		{
 			var claims = new List<Claim>
 			{
-				new Claim("userId", user.Id.ToString()),
-				new Claim("email", user.Email),
-				new Claim("firstName", user.FirstName),
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim("firstName", user.FirstName),
 				new Claim("lastName", user.LastName)
 			};
 

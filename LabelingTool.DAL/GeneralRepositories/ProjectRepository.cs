@@ -16,14 +16,12 @@ namespace LabelingTool.DAL.GeneralRepositories
         public ProjectRepository(IConfiguration configuration)
         {
             var connectionString = configuration.GetConnectionString("DefaultConnection");
-
             if (string.IsNullOrEmpty(connectionString))
                 throw new InvalidOperationException("Connection string 'DefaultConnection' not found in appsettings.json");
 
             _connectionString = connectionString;
         }
 
-        /// Get a single project by ID from database
         public async Task<ProjectDto?> GetByIdAsync(int projectId)
         {
             try
@@ -31,16 +29,15 @@ namespace LabelingTool.DAL.GeneralRepositories
                 using (var connection = new SqlConnection(_connectionString))
                 {
                     await connection.OpenAsync();
-
                     var command = new SqlCommand(@"
-                        SELECT 
-                            project_id,
-                            user_id,
-                            name,
-                            description,
-                            created_date
-                        FROM Project
-                        WHERE project_id = @ProjectId", connection);
+                        SELECT
+                            [Id],
+                            [UserId],
+                            [Title],
+                            [Description],
+                            [CreatedAt]
+                        FROM [Project]
+                        WHERE [Id] = @ProjectId", connection);
 
                     command.Parameters.AddWithValue("@ProjectId", projectId);
 
@@ -59,8 +56,6 @@ namespace LabelingTool.DAL.GeneralRepositories
                         }
                     }
                 }
-
-                return null;
             }
             catch (SqlException ex)
             {
@@ -70,9 +65,10 @@ namespace LabelingTool.DAL.GeneralRepositories
             {
                 throw new Exception("Unexpected error in GetByIdAsync(): " + ex.Message, ex);
             }
+
+            return null;
         }
 
-        /// Create a new project in database
         public async Task<int> CreateAsync(CreateProjectRequest request)
         {
             try
@@ -83,22 +79,21 @@ namespace LabelingTool.DAL.GeneralRepositories
                 using (var connection = new SqlConnection(_connectionString))
                 {
                     await connection.OpenAsync();
-
                     var command = new SqlCommand(@"
-                        INSERT INTO Project (user_id, name, description, created_date)
-                        OUTPUT INSERTED.project_id
-                        VALUES (@UserId, @Name, @Description, @CreatedDate)", connection);
+                        INSERT INTO [Project] ([UserId], [Title], [Description], [CreatedAt])
+                        OUTPUT INSERTED.[Id]
+                        VALUES (@UserId, @Title, @Description, @CreatedAt)", connection);
 
                     command.Parameters.AddWithValue("@UserId", DBNull.Value); // No user for now
-                    command.Parameters.AddWithValue("@Name", request.Name);
+                    command.Parameters.AddWithValue("@Title", request.Name);
                     command.Parameters.AddWithValue("@Description", request.Description ?? "");
-                    command.Parameters.AddWithValue("@CreatedDate", DateTime.Now);
+                    command.Parameters.AddWithValue("@CreatedAt", DateTime.Now);
 
                     var result = await command.ExecuteScalarAsync();
                     if (result == null)
                         throw new Exception("Failed to insert project - database returned null");
-                    int projectId = (int)result;
 
+                    int projectId = (int)result;
                     Console.WriteLine($"[DB] Created project with ID: {projectId}");
 
                     return projectId;

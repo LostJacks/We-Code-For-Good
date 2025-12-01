@@ -7,7 +7,7 @@ namespace LabelingTool.DAL.Interfaces
         Project GetById(int id);
         List<Project> GetAll();
         int Create(Project project);
-        void AddFile(int projectId, ProjectFile file);
+        void AddFile(int projectId, ProjectFile file, int frameNumber);
         void AddLabel(int projectId, string labelName);
     }
 }

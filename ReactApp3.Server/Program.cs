@@ -73,7 +73,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddSingleton<Database>(sp =>
 {
     var config = sp.GetService<IConfiguration>();
-    var connectionString = config.GetConnectionString("LabellingDb");
+    var connectionString = config.GetConnectionString("DefaultConnection");
     return new Database(connectionString!);
 });
 
@@ -89,6 +89,8 @@ builder.Services.AddScoped<IPasswordHasher<Model.AppUser>, PasswordHasher<Model.
 builder.Services.AddScoped<IMediaRepository, MediaRepository>();
 builder.Services.AddScoped<ILabelClassRepository, LabelClassRepository>();
 builder.Services.AddScoped<IProjectRepository, LabelingTool.DAL.GeneralRepositories.ProjectRepository>();
+builder.Services.AddScoped<IProjectFileRepository, ProjectFileRepository>();
+
 
 // =============================================================
 // 🟩 BOUNDING BOX SERVICES
@@ -121,6 +123,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseStaticFiles();
 
 // ✅ CORS must be before authentication
 app.UseCors("AllowReact");

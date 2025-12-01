@@ -19,18 +19,18 @@ namespace LabelingTool.DAL.Repositories
 			_database = database;
 		}
 
-		public void AddFile(int projectId, ProjectFile file)
+		public void AddFile(int projectId, ProjectFile file, int frameNumber)
 		{
 			using var connection = _database.CreateOpenConnection();
 			using var transaction = connection.BeginTransaction();
 
 			try
 			{
-				var sqlMedia = @"INSERT INTO Media (frame_number, file_path)
-							OUTPUT INSERTED.media_id
-							VALUES (@frame_number, @file_path)";
-				using var mediaCommand = new SqlCommand(sqlMedia, connection, transaction);
-				mediaCommand.Parameters.AddWithValue("@frame_number", 0); //TODO: set frame number properly
+				var sqlMedia = @"INSERT INTO [Media] ([ProjectId], [frame_number], [file_path], [width], [height])
+                    OUTPUT INSERTED.[media_id]
+                    VALUES (@projectId, @frame_number, @file_path, @width, @height)";
+                using var mediaCommand = new SqlCommand(sqlMedia, connection, transaction);
+				mediaCommand.Parameters.AddWithValue("@frame_number", frameNumber);
 				mediaCommand.Parameters.AddWithValue("@file_path", file.FilePath);
 				int mediaId = (int)mediaCommand.ExecuteScalar();
 				var sqlProjectMedia = @"INSERT INTO Project_Media (project_id, media_id)
@@ -55,10 +55,10 @@ namespace LabelingTool.DAL.Repositories
 			{
 				using var connection = _database.CreateOpenConnection();
 
-				var sql = @"INSERT INTO Labelclass (name, color)
+				var sql = @"INSERT INTO [Labelclass] ([name], [color])
                     VALUES (@name, @color)";
 
-				using var command = new SqlCommand(sql, connection);
+                using var command = new SqlCommand(sql, connection);
 				command.Parameters.AddWithValue("@name", labelName);
 				command.Parameters.AddWithValue("@color", "red");
 
@@ -82,17 +82,16 @@ namespace LabelingTool.DAL.Repositories
 			{
 				using var connection = _database.CreateOpenConnection();
 
-				var sql = @"
-            INSERT INTO Project (user_id, name, description, created_date)
-            OUTPUT INSERTED.project_id
-            VALUES (@userId, @name, @description, @created_date);";
+				var sql = @"INSERT INTO [Project] ([UserId], [Title], [Description], [CreatedAt])
+                    OUTPUT INSERTED.[Id]
+                    VALUES (@UserId, @Title, @Description, @CreatedAt)";
 
-				using var command = new SqlCommand(sql, connection);
+                using var command = new SqlCommand(sql, connection);
 
-				command.Parameters.AddWithValue("@userId", project.UserId);
-				command.Parameters.AddWithValue("@name", project.Title);
-				command.Parameters.AddWithValue("@description", project.Description ?? "");
-				command.Parameters.AddWithValue("@created_date", project.CreatedAt);
+				command.Parameters.AddWithValue("@UserId", project.UserId);
+				command.Parameters.AddWithValue("@Title", project.Title);
+				command.Parameters.AddWithValue("@Description", project.Description ?? "");
+				command.Parameters.AddWithValue("@CreatedAt", project.CreatedAt);
 
 				var result = command.ExecuteScalar();
 				return (int)result;
@@ -116,9 +115,9 @@ namespace LabelingTool.DAL.Repositories
 			{
 				using var connection = _database.CreateOpenConnection();
 				using var command = new SqlCommand(
-				"SELECT project_id, user_id, name, description, created_date FROM Project", connection);
+                @"SELECT [Id], [UserId], [Title], [Description], [CreatedAt] FROM [Project]", connection);
 
-				using var reader = command.ExecuteReader();
+                using var reader = command.ExecuteReader();
 
 				while (reader.Read())
 				{
@@ -154,12 +153,11 @@ namespace LabelingTool.DAL.Repositories
 			{
 				using var connection = _database.CreateOpenConnection();
 
-				var sql = @"
-            SELECT project_id, user_id, name, description, created_date
-            FROM Project
-            WHERE project_id = @id";
+				var sql = @"SELECT [Id], [UserId], [Title], [Description], [CreatedAt]
+                    FROM [Project]
+                    WHERE [Id] = @id";
 
-				using var command = new SqlCommand(sql, connection);
+                using var command = new SqlCommand(sql, connection);
 				command.Parameters.AddWithValue("@id", id);
 
 				using var reader = command.ExecuteReader();
@@ -196,11 +194,11 @@ namespace LabelingTool.DAL.Repositories
 			{
 				using var connection = _database.CreateOpenConnection();
 
-				var sql = @"SELECT project_id, user_id, name, description, created_date
-                    FROM Project
-                    WHERE user_id = @UserId";
+				var sql = @"SELECT [Id], [UserId], [Title], [Description], [CreatedAt]
+                    FROM [Project]
+                    WHERE [UserId] = @UserId";
 
-				using var command = new SqlCommand(sql, connection);
+                using var command = new SqlCommand(sql, connection);
 				command.Parameters.AddWithValue("@UserId", userId);
 
 				using var reader = command.ExecuteReader();

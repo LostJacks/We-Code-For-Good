@@ -67,22 +67,36 @@ namespace SmartServer.Controllers
 
         /// Create a new bounding box
         [HttpPost]
+        [HttpPost]
         public async Task<ActionResult<BoundingBoxDto>> Create([FromBody] CreateBoundingBoxRequest request)
         {
+            Console.WriteLine($"[BB] POST /api/boundingbox received");
+            Console.WriteLine($"[BB] mediaId: {request.MediaId}");
+            Console.WriteLine($"[BB] labelClassId: {request.LabelClassId}");
+            Console.WriteLine($"[BB] Coordinates: ({request.X1}, {request.Y1}) to ({request.X2}, {request.Y2})");
+
             if (!ModelState.IsValid)
+            {
+                Console.WriteLine($"[BB] ❌ ModelState invalid: {string.Join(", ", ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage)))}");
                 return BadRequest(ModelState);
+            }
 
             try
             {
+                Console.WriteLine($"[BB] Calling service.CreateAsync...");
                 var box = await _service.CreateAsync(request);
+                Console.WriteLine($"[BB] ✅ Created successfully: {box.BoundingBoxId}");
                 return CreatedAtAction(nameof(GetById), new { id = box.BoundingBoxId }, box);
             }
             catch (ArgumentException ex)
             {
+                Console.WriteLine($"[BB] ❌ ArgumentException: {ex.Message}");
                 return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"[BB] ❌ Exception: {ex.Message}");
+                Console.WriteLine($"[BB] Stack: {ex.StackTrace}");
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }

@@ -1,12 +1,15 @@
 ﻿import React, { useState } from "react";
 
 export default function FrameStrip({
-    currentFrame: initialFrame = 12,
-    totalFrames = 180,
+    files = [],
+    currentFileIndex = 0,
+    onFileIndexChange = () => { },
 }) {
+
     const [startIndex, setStartIndex] = useState(0);
-    const [currentFrame, setCurrentFrame] = useState(initialFrame);
     const FRAMES_VISIBLE = 10;
+
+    const totalFrames = files.length;
 
     // Move by 10 frames per click
     const scrollLeft = () => {
@@ -23,18 +26,20 @@ export default function FrameStrip({
     const visibleFrames = Array.from(
         { length: FRAMES_VISIBLE },
         (_, i) => startIndex + i
-    );
+    ).filter(i => i < totalFrames); {/* ← Add this filter */ }
 
     // When user clicks on a frame
-    const handleFrameClick = (frameNumber) => {
-        setCurrentFrame(frameNumber);
+    const handleFrameClick = (index) => {
+        onFileIndexChange(index); {/* ← Changed this */ }
     };
+
+    if (!files || files.length === 0) return null;
 
     return (
         <div className="frame-strip-section">
             {/* Frame Counter */}
             <div className="frame-counter">
-                Frame: {currentFrame}/{totalFrames}
+                Frame: {currentFileIndex + 1}/{totalFrames}
             </div>
 
             {/* Frame Strip */}
@@ -49,23 +54,18 @@ export default function FrameStrip({
 
                 <div className="frame-thumbnails">
                     {visibleFrames.map((frameIndex) => {
-                        const frameNumber = frameIndex + 1;
+                        const file = files[frameIndex];
                         return (
                             <div
                                 key={frameIndex}
-                                className={`thumb ${frameNumber === currentFrame ? "active" : ""
-                                    }`}
-                                onClick={() => handleFrameClick(frameNumber)}
+                                className={`thumb ${frameIndex === currentFileIndex ? "active" : ""}`}
+                                onClick={() => handleFrameClick(frameIndex)}
                                 style={{ cursor: "pointer" }}
                             >
                                 <img
-                                    src="/assets/default-placeholder.png"
-                                    alt={`Frame ${frameNumber}`}
-                                    className={
-                                        frameNumber === currentFrame
-                                            ? "highlighted"
-                                            : ""
-                                    }
+                                    src={`${import.meta.env.VITE_API_URL}${file.filePath}`}
+                                    alt={`Frame ${frameIndex + 1}`}
+                                    className={frameIndex === currentFileIndex ? "highlighted" : ""}
                                 />
                             </div>
                         );

@@ -1,9 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using Microsoft.AspNetCore.Mvc;
+﻿using LabelingTool.BLL.DTOs;        // ✅ for CreateProjectRequest
 using LabelingTool.BLL.Interfaces;
-using LabelingTool.BLL.DTOs;        // ✅ for CreateProjectRequest
+using LabelingTool.DAL.GeneralRepositories;
+using LabelingTool.DAL.Interfaces;
 using LabelingTool.Model;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Model.GeneralDTOs;
+using SmartServer.DTOs;
+using System;
+using System.Collections.Generic;
 
 namespace Smart_Server.Controllers
 {
@@ -11,11 +16,17 @@ namespace Smart_Server.Controllers
     [Route("api/[controller]")]
     public class ProjectsController : ControllerBase
     {
+        private readonly IWebHostEnvironment _env;
         private readonly IProjectsService _projectsService;
+        private readonly IProjectFileRepository _projectFileRepository;
+        private readonly IMediaRepository _mediaRepository;
 
-        public ProjectsController(IProjectsService projectsService)
+        public ProjectsController(IWebHostEnvironment env, IProjectsService projectsService, IProjectFileRepository projectFileRepository, IMediaRepository mediaRepository)
         {
+            _env = env;
             _projectsService = projectsService;
+            _projectFileRepository = projectFileRepository;
+            _mediaRepository = mediaRepository;
         }
 
         // ============================================================
@@ -40,7 +51,8 @@ namespace Smart_Server.Controllers
         // GET: api/projects/{id}
         // ============================================================
         [HttpGet("{id:int}")]
-        public ActionResult<Project> GetById(int id)
+        [Authorize]
+        public async Task<ActionResult> GetById(int id)
         {
             try
             {
@@ -49,7 +61,24 @@ namespace Smart_Server.Controllers
                 if (project == null)
                     return NotFound();
 
-                return Ok(project);
+                // ✅ Get files for this project
+                var projectFiles = await _projectFileRepository.GetFilesByProjectIdAsync(id);
+
+                Console.WriteLine($"[CTRL] Retrieved {projectFiles.Count} files");
+
+                return Ok(new
+                {
+                    projectId = project.Id,
+                    title = project.Title,
+                    description = project.Description,
+                    createdAt = project.CreatedAt,
+                    files = projectFiles.Select(f => new
+                    {
+                        id = f.Id,
+                        filePath = f.FilePath,
+                        fileType = f.FileType
+                    })
+                });
             }
             catch (Exception ex)
             {
@@ -62,15 +91,26 @@ namespace Smart_Server.Controllers
         // POST: api/projects
         // ============================================================
         [HttpPost]
-        public ActionResult<int> Create([FromBody] CreateProjectRequest request)
+        [Authorize]
+        public ActionResult<int> Create([FromBody] LabelingTool.BLL.DTOs.CreateProjectRequest request)
         {
             if (request == null || string.IsNullOrWhiteSpace(request.Title))
                 return BadRequest("Invalid project data.");
 
             try
             {
+                var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                Console.WriteLine($"[DEBUG] UserID Claim Value: '{userIdClaim}'");
+
+                if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+                {
+                    return Unauthorized(new { message = "User ID not found in token. Please login." });
+                }
+                Console.WriteLine($"[DEBUG] Parsed userId: {userId}");
+
                 var project = new Project
                 {
+
                     Title = request.Title,
                     Description = request.Description,
                     CreatedAt = DateTime.UtcNow
@@ -83,7 +123,7 @@ namespace Smart_Server.Controllers
                     request.Labels ?? new List<string>()
                 );
 
-                return Ok(newId);
+                return Ok(new { projectId = newId, message = "Project created successfully" });
             }
             catch (Exception ex)
             {
@@ -95,59 +135,81 @@ namespace Smart_Server.Controllers
         // ============================================================
         // (Optional) POST: api/projects/upload
         // ============================================================
-        /*
         [HttpPost("upload")]
+        [Authorize]
         public async Task<IActionResult> UploadFile([FromForm] UploadRequest request)
         {
-            if (request.File == null || request.File.Length == 0)
-                return BadRequest("No file uploaded.");
-
             try
             {
-                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
-                Directory.CreateDirectory(uploadsFolder);
+                Console.WriteLine($"[1] Upload endpoint hit");
+
+                if (request.File == null || request.File.Length == 0)
+                    return BadRequest("No file uploaded.");
+
+                if (!request.ProjectId.HasValue)
+                    return BadRequest("ProjectId is required.");
+
+                Console.WriteLine($"[2] ProjectId: {request.ProjectId.Value}");
+
+                var project = _projectsService.GetProject(request.ProjectId.Value);
+                if (project == null)
+                    return NotFound("Project not found.");
+
+                Console.WriteLine($"[3] Project found");
+
+                var projectFolder = Path.Combine(_env.WebRootPath, "uploads", request.ProjectId.Value.ToString());
+                if (!Directory.Exists(projectFolder))
+                    Directory.CreateDirectory(projectFolder);
 
                 var uniqueName = $"{Guid.NewGuid()}{Path.GetExtension(request.File.FileName)}";
-                var filePath = Path.Combine(uploadsFolder, uniqueName);
+                var filePath = Path.Combine(projectFolder, uniqueName);
 
                 using (var stream = new FileStream(filePath, FileMode.Create))
                 {
                     await request.File.CopyToAsync(stream);
                 }
 
-                var relativePath = $"/uploads/{uniqueName}";
+                Console.WriteLine($"[4] File saved to disk: {filePath}");
 
-                // ✅ Attach file to existing project
-                if (request.ProjectId.HasValue)
+                var relativePath = $"/uploads/{request.ProjectId.Value}/{uniqueName}";
+                string fileType = Path.GetExtension(request.File.FileName).ToLower().Contains("mp4") ? "Video" : "Image";
+
+                Console.WriteLine($"[5] About to call repository.AddFileAsync");
+                Console.WriteLine($"[5a] ProjectId={request.ProjectId.Value}, FilePath={relativePath}, FileType={fileType}");
+
+                await _projectFileRepository.AddFileAsync(
+                    request.ProjectId.Value,
+                    relativePath,
+                    fileType
+                );
+
+                Console.WriteLine($"[5.5] ProjectFile created, now creating Media record");
+
+                // ✅ NEW: Create Media record using your existing repo
+                int mediaId = await _mediaRepository.CreateAsync(new CreateMediaRequest
                 {
-                    var project = _context.Projects.FirstOrDefault(p => p.Id == request.ProjectId.Value);
-                    if (project != null)
-                    {
-                        var newFile = new ProjectFile
-                        {
-                            FilePath = relativePath,
-                            FileType = Path.GetExtension(request.File.FileName)
-                                .ToLower()
-                                .Contains("mp4") ? "Video" : "Image",
-                            ProjectId = project.Id
-                        };
+                    ProjectId = request.ProjectId.Value,
+                    FrameNumber = 0,  // Default frame number
+                    FilePath = relativePath,
+                    Width = 1920,     // Default width
+                    Height = 1080     // Default height
+                });
 
-                        _context.ProjectFiles.Add(newFile);
+                Console.WriteLine($"[6] ✅ Media created with ID: {mediaId}");
 
-                        if (string.IsNullOrEmpty(project.PreviewImage))
-                            project.PreviewImage = relativePath;
-
-                        await _context.SaveChangesAsync();
-                    }
-                }
-
-                return Ok(new { imagePath = relativePath });
+                return Ok(new
+                {
+                    filePath = relativePath,
+                    mediaId = mediaId,
+                    message = "File uploaded successfully"
+                });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"File upload failed: {ex.Message}");
+                Console.WriteLine($"❌ ERROR: {ex.Message}");
+                Console.WriteLine($"❌ STACK: {ex.StackTrace}");
+                return StatusCode(500, new { message = ex.Message });
             }
         }
-        */
     }
 }

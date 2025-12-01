@@ -1,4 +1,5 @@
 ﻿import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import ProjectCard from "../components/ProjectCard";
 import AddProjectCard from "../components/AddProjectCard";
 import SortBar from "../components/SortBar";
@@ -7,6 +8,7 @@ import HeaderBar from "../components/HeaderBar";
 import "../styles/main.css";
 
 export default function MainPage() {
+    const navigate = useNavigate();
     const [projects, setProjects] = useState([]);
     const [sortBy, setSortBy] = useState("az");
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -34,6 +36,10 @@ export default function MainPage() {
         sortBy === "az" ? a.title.localeCompare(b.title) : a.id - b.id
     );
 
+    const handleOpenProject = (projectId) => {
+        navigate(`/label/${projectId}`);
+    };
+
     return (
         <div className="main-page">
             <HeaderBar />
@@ -47,12 +53,17 @@ export default function MainPage() {
                 {/* ✅ Project Grid */}
                 <div className="project-grid">
                     {sortedProjects.map((p) => (
-                        <ProjectCard
+                        <div
                             key={p.id}
-                            title={p.title}
-                            createdAt={p.createdAt}
-                            previewImage={p.previewImage}
-                        />
+                            onClick={() => handleOpenProject(p.id)}
+                            style={{ cursor: "pointer" }}
+                        >
+                            <ProjectCard
+                                title={p.title}
+                                createdAt={p.createdAt}
+                                previewImage={p.previewImage}
+                            />
+                        </div>
                     ))}
                     <AddProjectCard onClick={() => setIsModalOpen(true)} />
                 </div>

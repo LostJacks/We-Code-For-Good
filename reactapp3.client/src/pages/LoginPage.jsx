@@ -34,8 +34,20 @@ export default function LoginPage() {
                 throw new Error(txt || "Login failed");
             }
             const data = await res.json();
+            console.log("API Response:", data);
+            console.log("accessToken:", data.accessToken);
+            console.log("refreshToken:", data.refreshToken);
+
+            if (!data.accessToken) {
+                console.error("No accessToken in response!");
+                throw new Error("No token received from server");
+            }
+
             localStorage.setItem("accessToken", data.accessToken);
             localStorage.setItem("refreshToken", data.refreshToken);
+
+            console.log("Tokens stored in localStorage");
+            console.log("localStorage contents:", localStorage);
             
             navigate("/main");
         } catch (err) {

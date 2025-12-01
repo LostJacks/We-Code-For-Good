@@ -9,6 +9,7 @@ namespace Model.GeneralDTOs
     public class MediaDto
     {
         public int MediaId { get; set; }
+        public int ProjectId { get; set; }
         public int FrameNumber { get; set; }
         public required string FilePath { get; set; }
         public int Width { get; set; }
@@ -17,6 +18,7 @@ namespace Model.GeneralDTOs
 
     public class CreateMediaRequest
     {
+        public int ProjectId { get; set; }
         public int FrameNumber { get; set; }
         public required string FilePath { get; set; }
         public int Width { get; set; }

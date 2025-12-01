@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import UserNameInput from "../components/UserNameInput";
 import FirstNameInput from "../components/FirstNameInput";
 import LastNameInput from "../components/LastNameInput";
 import EmailInput from "../components/EmailInput";

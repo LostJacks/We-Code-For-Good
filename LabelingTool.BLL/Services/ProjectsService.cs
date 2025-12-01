@@ -29,9 +29,9 @@ namespace LabelingTool.BLL.Services
 			{
 				int projectId = _repo.Create(project);
 
-				foreach (var file in files)
-				{
-					_repo.AddFile(projectId, file);
+                for (int i = 0; i < files.Count; i++)
+                {
+                    _repo.AddFile(projectId, files[i], i + 1);
 				}
 
 				foreach (var label in labels)
