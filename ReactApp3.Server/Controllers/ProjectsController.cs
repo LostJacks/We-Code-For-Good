@@ -110,7 +110,7 @@ namespace Smart_Server.Controllers
 
                 var project = new Project
                 {
-
+                    UserId = userId,
                     Title = request.Title,
                     Description = request.Description,
                     CreatedAt = DateTime.UtcNow
