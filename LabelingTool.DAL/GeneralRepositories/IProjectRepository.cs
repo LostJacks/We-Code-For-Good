@@ -1,4 +1,5 @@
-﻿using Model.GeneralDTOs;
+﻿using LabelingTool.Model;
+using Model.GeneralDTOs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,5 +12,7 @@ namespace LabelingTool.DAL.GeneralRepositories
     {
         Task<ProjectDto?> GetByIdAsync(int projectId);
         Task<int> CreateAsync(CreateProjectRequest request);
+        void AddLabel(int projectId, string labelName);
+
     }
 }

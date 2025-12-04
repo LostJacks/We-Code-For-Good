@@ -41,11 +41,17 @@ namespace LabelingTool.BLL.ExportServices
             // Get all media for project
             var mediaList = await _mediaRepository.GetByProjectIdAsync(projectId);
 
-            // Get all label classes
-            var allClasses = await _labelClassRepository.GetAllAsync();
+            // ✅ GET PROJECT'S LABEL CLASSES (not all classes)
+            var projectClasses = await _labelClassRepository.GetByProjectIdAsync(projectId);
+
+            // Create a mapping: LabelName → LabelClassId (for bounding boxes)
+            var labelNameToClassId = new Dictionary<string, int>();
+            foreach (var labelClass in projectClasses)
+            {
+                labelNameToClassId[labelClass.Name] = labelClass.LabelClassId;
+            }
 
             var yoloImages = new List<YoloImageDto>();
-            var usedClasses = new HashSet<int>();
 
             // Process each image
             foreach (var media in mediaList)
@@ -60,9 +66,14 @@ namespace LabelingTool.BLL.ExportServices
 
                 foreach (var box in boxes)
                 {
+                    // Find the class name for this box's LabelClassId
+                    var className = projectClasses
+                        .FirstOrDefault(c => c.LabelClassId == box.LabelClassId)
+                        ?.Name ?? "unknown";
+
                     var yoloBox = ConvertToYoloBox(box, media.Width, media.Height);
+                    yoloBox.ClassName = className;  // ✅ SET CLASS NAME
                     yoloBoxes.Add(yoloBox);
-                    usedClasses.Add(box.LabelClassId);
                 }
 
                 yoloImages.Add(new YoloImageDto
@@ -75,9 +86,8 @@ namespace LabelingTool.BLL.ExportServices
                 });
             }
 
-            // Get class names for used classes
-            var classNames = allClasses
-                .Where(c => usedClasses.Contains(c.LabelClassId))
+            // ✅ USE PROJECT CLASSES (in order)
+            var classNames = projectClasses
                 .OrderBy(c => c.LabelClassId)
                 .Select(c => c.Name)
                 .ToList();
@@ -154,6 +164,7 @@ namespace LabelingTool.BLL.ExportServices
                             // Write each bounding box
                             foreach (var box in image.Boxes)
                             {
+                                int classIndex = export.Classes.IndexOf(box.ClassName);
                                 string line = $"{box.ClassId} {box.XCenter:F6} {box.YCenter:F6} {box.Width:F6} {box.Height:F6}";
                                 await writer.WriteLineAsync(line);
                             }

@@ -10,8 +10,9 @@ namespace LabelingTool.Model
 		public string Title { get; set; }
 		public string Description { get; set; }
 		public DateTime CreatedAt { get; set; }
+        public string PreviewImage { get; set; } = "";
 
-		public List<ProjectFile> Files { get; set; }
+        public List<ProjectFile> Files { get; set; }
 		public List<ProjectLabel> Labels { get; set; }
 	}
 }

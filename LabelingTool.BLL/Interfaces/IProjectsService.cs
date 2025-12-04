@@ -1,4 +1,5 @@
 ﻿using LabelingTool.Model;
+using Model.GeneralDTOs;
 
 namespace LabelingTool.BLL.Interfaces
 {

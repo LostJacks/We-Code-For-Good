@@ -11,5 +11,6 @@ namespace LabelingTool.DAL.GeneralRepositories
     {
         Task<List<LabelClassDto>> GetAllAsync();
         Task<LabelClassDto?> GetByIdAsync(int labelClassId);
+        Task<List<LabelClassDto>> GetByProjectIdAsync(int projectId);
     }
 }

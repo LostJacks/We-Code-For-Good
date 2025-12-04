@@ -1,11 +1,18 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { FaCog } from "react-icons/fa";
 import "../styles/main.css";
 import { FaSignOutAlt } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { getUserFromToken } from "../services/UserService";
 
 export default function HeaderBar() {
     const navigate = useNavigate();
+    const [user, setUser] = useState(null);
+
+    useEffect(() => {
+        const userData = getUserFromToken();
+        setUser(userData);
+    }, []);
 
     return (
         <>
@@ -13,7 +20,7 @@ export default function HeaderBar() {
             <header className="header-bar">
                 <div className="header-left">
                     <div className="profile-circle"></div>
-                    <h3>Group One</h3>
+                    <h3>{user ? `${user.firstName} ${user.lastName}` : "Group One"}</h3>
                 </div>
 
                 {/* Gear inside red header */}

@@ -32,5 +32,15 @@ namespace LabelingTool.DAL.GeneralRepositories.MockData
             var labelClass = _classes.Find(c => c.LabelClassId == labelClassId);
             return Task.FromResult(labelClass);
         }
+
+        public async Task<List<LabelClassDto>> GetByProjectIdAsync(int projectId)
+        {
+            var mockClasses = new List<LabelClassDto>
+    {
+        new LabelClassDto { LabelClassId = 1, Name = "Class 1", Color = "#FF0000" },
+        new LabelClassDto { LabelClassId = 2, Name = "Class 2", Color = "#00FF00" }
+    };
+            return await Task.FromResult(mockClasses);
+        }
     }
 }

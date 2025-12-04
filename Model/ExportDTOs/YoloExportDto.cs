@@ -26,6 +26,7 @@ namespace Model.ExportDTOs
     public class YoloBoxDto
     {
         public int ClassId { get; set; }
+        public string ClassName { get; set; }
         public float XCenter { get; set; }
         public float YCenter { get; set; }
         public float Width { get; set; }

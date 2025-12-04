@@ -1,4 +1,5 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using LabelingTool.Model;
+using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using Model.GeneralDTOs;
 using System;
@@ -106,6 +107,31 @@ namespace LabelingTool.DAL.GeneralRepositories
             catch (Exception ex)
             {
                 throw new Exception("Unexpected error in CreateAsync(): " + ex.Message, ex);
+            }
+        }
+        public void AddLabel(int projectId, string labelName)
+        {
+            try
+            {
+                Console.WriteLine($"[REPO] Adding label: ProjectId={projectId}, LabelName={labelName}");
+
+                using (var connection = new SqlConnection(_connectionString))
+                {
+                    connection.Open();
+                    var command = new SqlCommand(
+                        "INSERT INTO ProjectLabel (ProjectId, LabelName) VALUES (@ProjectId, @LabelName)",
+                        connection);
+                    command.Parameters.AddWithValue("@ProjectId", projectId);
+                    command.Parameters.AddWithValue("@LabelName", labelName);
+                    command.ExecuteNonQuery();
+
+                    Console.WriteLine($"[REPO] ✅ Label saved successfully");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[REPO] ❌ Error in AddLabel(): {ex.Message}");
+                throw new Exception("Error in AddLabel(): " + ex.Message, ex);
             }
         }
     }

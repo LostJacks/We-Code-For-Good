@@ -2,6 +2,7 @@
 import { useNavigate } from "react-router-dom";
 import ProjectCard from "../components/ProjectCard";
 import AddProjectCard from "../components/AddProjectCard";
+import SearchBar from "../components/SearchBar";
 import SortBar from "../components/SortBar";
 import NewProjectModal from "../components/NewProjectModal";
 import HeaderBar from "../components/HeaderBar";
@@ -10,8 +11,9 @@ import "../styles/main.css";
 export default function MainPage() {
     const navigate = useNavigate();
     const [projects, setProjects] = useState([]);
-    const [sortBy, setSortBy] = useState("az");
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [sortBy, setSortBy] = useState("name-asc");
 
     const API_BASE = import.meta.env.VITE_API_URL || "";
 
@@ -31,10 +33,49 @@ export default function MainPage() {
         fetchProjects();
     }, []);
 
+    useEffect(() => {
+        console.log("Projects data:", projects);
+        if (projects.length > 0) {
+            console.log("First project labels:", projects[0].labels);
+        }
+    }, [projects]);
+
+    // ✅ Filter projects by search query (including labels)
+    const filteredProjects = projects.filter((p) => {
+        const query = searchQuery.toLowerCase();
+
+        if (p.title.toLowerCase().includes(query)) return true;
+        if (p.description.toLowerCase().includes(query)) return true;
+
+        const dateStr = new Date(p.createdAt).toLocaleDateString().toLowerCase();
+        if (dateStr.includes(query)) return true;
+
+        if (p.labels && Array.isArray(p.labels)) {
+            if (p.labels.some(label =>
+                label.labelName?.toLowerCase().includes(query)  // ✅ Changed to labelName
+            )) return true;
+        }
+
+        return false;
+    });
+
     // ✅ Sort logic
-    const sortedProjects = [...projects].sort((a, b) =>
-        sortBy === "az" ? a.title.localeCompare(b.title) : a.id - b.id
-    );
+    const sortedProjects = [...filteredProjects].sort((a, b) => {
+        const [sortField, direction] = sortBy.split("-");
+        const isAsc = direction === "asc";
+
+        if (sortField === "name") {
+            return isAsc
+                ? a.title.localeCompare(b.title)
+                : b.title.localeCompare(a.title);
+        } else if (sortField === "date") {
+            return isAsc
+                ? new Date(a.createdAt) - new Date(b.createdAt)
+                : new Date(b.createdAt) - new Date(a.createdAt);
+        }
+
+        return 0;
+    });
 
     const handleOpenProject = (projectId) => {
         navigate(`/label/${projectId}`);
@@ -48,10 +89,12 @@ export default function MainPage() {
                 <h1 className="projects-title">Projects</h1>
                 <div className="title-line"></div>
 
+                <SearchBar projects={projects} onSearch={setSearchQuery} />
                 <SortBar sortBy={sortBy} setSortBy={setSortBy} />
 
                 {/* ✅ Project Grid */}
                 <div className="project-grid">
+                    <AddProjectCard onClick={() => setIsModalOpen(true)} />
                     {sortedProjects.map((p) => (
                         <div
                             key={p.id}
@@ -65,7 +108,6 @@ export default function MainPage() {
                             />
                         </div>
                     ))}
-                    <AddProjectCard onClick={() => setIsModalOpen(true)} />
                 </div>
             </div>
 

@@ -1,4 +1,5 @@
-﻿using Model.GeneralDTOs;
+﻿using LabelingTool.Model;
+using Model.GeneralDTOs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,6 +35,22 @@ namespace LabelingTool.DAL.GeneralRepositories.MockData
             };
         }
 
+        public async Task<List<Project>> GetAllAsync()  // ✅ ADD THIS
+        {
+            return await Task.FromResult(new List<Project>
+        {
+            new Project
+            {
+                Id = 1,
+                UserId = 1,
+                Title = "Sample Project",
+                Description = "A sample project",
+                CreatedAt = DateTime.Now,
+                PreviewImage = "/uploads/sample.jpg"
+            }
+        });
+        }
+
         public Task<ProjectDto?> GetByIdAsync(int projectId)
         {
             var project = _projects.Find(p => p.ProjectId == projectId);
@@ -53,6 +70,11 @@ namespace LabelingTool.DAL.GeneralRepositories.MockData
             };
             _projects.Add(project);
             return Task.FromResult(newId);
+        }
+
+        public void AddLabel(int projectId, string labelName)
+        {
+            // Mock implementation - do nothing for testing
         }
     }
 }

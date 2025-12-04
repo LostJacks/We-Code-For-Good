@@ -1,6 +1,7 @@
 ﻿import React, { useState, useEffect } from "react";
 import { CLASS_COLORS } from "@/utils/classColors";
 import { useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import LeftSidebar from "@/components/LeftSidebar";
 import ImageCanvas from "@/components/ImageCanvas";
@@ -13,6 +14,7 @@ import "@/styles/labelPage.css";
 const API = import.meta.env.VITE_API_URL;
 
 export default function LabelPage() {
+    const navigate = useNavigate();
     const { projectId } = useParams();
 
     // =========================================
@@ -29,6 +31,8 @@ export default function LabelPage() {
 
     const [selectedBox, setSelectedBox] = useState(null);
     const [cursorColorMode, setCursorColorMode] = useState(false);
+    const [showCrosshair, setShowCrosshair] = useState(true);
+    const [isolateMode, setIsolateMode] = useState(false);
 
     // Frame navigation
     const [currentFileIndex, setCurrentFileIndex] = useState(0);
@@ -36,23 +40,23 @@ export default function LabelPage() {
     // =========================================
     // 🧩 Shared label class state
     // =========================================
-    const initialClasses = [
-        "Fur Jacket",
-        "T-Shirt",
-        "Blazer",
-        "Boots",
-        "Cardigan",
-    ].map((name, i) => ({
-        id: i + 1,
-        name,
-        color: CLASS_COLORS[i % CLASS_COLORS.length],
-        shortcut: i === 9 ? "0" : (i + 1).toString(),
-    }));
-
-    const [labelClasses, setLabelClasses] = useState(initialClasses);
+    const [labelClasses, setLabelClasses] = useState([]);
     const [activeClassIndex, setActiveClassIndex] = useState(0);
     const [boxes, setBoxes] = useState([]);
     const [visibleLabel, setVisibleLabel] = useState(null);
+
+    // Load classes from project data
+    useEffect(() => {
+        if (project?.labelClasses && project.labelClasses.length > 0) {
+            const classesWithColors = project.labelClasses.map((name, i) => ({
+                id: i + 1,
+                name,
+                color: CLASS_COLORS[i % CLASS_COLORS.length],
+                shortcut: i === 9 ? "0" : (i + 1).toString(),
+            }));
+            setLabelClasses(classesWithColors);
+        }
+    }, [project]);
 
     const activeClass = labelClasses[activeClassIndex];
 
@@ -98,6 +102,36 @@ export default function LabelPage() {
     }, [labelClasses]);
 
     // =========================================
+    // 📤 EXPORT HANDLER
+    // =========================================
+    const handleExport = async () => {
+        try {
+            const token = localStorage.getItem('accessToken');
+            const res = await fetch(`${API}/api/projects/${projectId}/export`, {
+                method: 'GET',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (!res.ok) throw new Error('Export failed');
+
+            const blob = await res.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `project-export-${projectId}.zip`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+
+            console.log('✅ Export successful');
+        } catch (err) {
+            console.error('❌ Export error:', err);
+            alert('Export failed: ' + err.message);
+        }
+    };
+
+    // =========================================
     // ✅ LOADING STATE
     // =========================================
     if (loading) return <div>Loading project...</div>;
@@ -108,6 +142,13 @@ export default function LabelPage() {
             {/* HEADER */}
             <div className="label-header">
                 <div className="header-left">
+                    <button
+                        className="back-btn"
+                        onClick={() => navigate(-1)}
+                        title="Back to projects"
+                    >
+                        ← Back
+                    </button>
                     <h2>{project.title}</h2>
                     <span className="autosave-text">AutoSave</span>
                     <label className="autosave-switch">
@@ -117,7 +158,7 @@ export default function LabelPage() {
                 </div>
 
                 <div className="header-right">
-                    <button className="export-btn">EXPORT</button>
+                    <button className="export-btn" onClick={handleExport}>EXPORT</button>
                     <button
                         className="settings-btn"
                         title="Settings"
@@ -187,6 +228,8 @@ export default function LabelPage() {
                     setLabelClasses={setLabelClasses}
                     onFilterChange={setVisibleLabel}
                     onCursorModeChange={setCursorColorMode}
+                    onShowCrosshairChange={setShowCrosshair}
+                    onIsolateModeChange={setIsolateMode}
                 />
 
                 <ImageCanvas
@@ -199,6 +242,8 @@ export default function LabelPage() {
                     files={files}
                     currentFileIndex={currentFileIndex}
                     onFileIndexChange={setCurrentFileIndex}
+                    showCrosshair={showCrosshair}
+                    isolateMode={isolateMode}
                 />
 
                 <RightSidebar activeClass={activeClass} selectedBox={selectedBox} />

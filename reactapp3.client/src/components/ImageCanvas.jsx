@@ -17,6 +17,8 @@ export default function ImageCanvas({
     currentFileIndex = 0,
     onFileIndexChange,
     mediaId = 1,
+    showCrosshair = true,
+    isolateMode = false,
 }) {
     const canvasRef = useRef(null);
     const imgRef = useRef(null);
@@ -29,12 +31,70 @@ export default function ImageCanvas({
     const [resizing, setResizing] = useState(false);
     const [resizeCorner, setResizeCorner] = useState(null);
 
+    // ✅ UNDO/REDO STATE
+    const [history, setHistory] = useState([[]]);
+    const [historyIndex, setHistoryIndex] = useState(0);
+
     const MIN_BOX_SIZE = 5;
     const imageUrl = files.length > 0
         ? `${import.meta.env.VITE_API_URL}${files[currentFileIndex]?.filePath}`
         : null;
     const currentFile = files.length > 0 ? files[currentFileIndex] : null;
     const currentMediaId = currentFile?.mediaId || currentFile?.id || mediaId;
+
+    // ✅ Helper: Save state to history
+    const saveToHistory = (newBoxes) => {
+        const newHistory = history.slice(0, historyIndex + 1);
+        newHistory.push(newBoxes);
+        setHistory(newHistory);
+        setHistoryIndex(newHistory.length - 1);
+        setBoxes(newBoxes);
+        onBoxesChange(newBoxes);
+    };
+
+    // ✅ UNDO
+    const handleUndo = () => {
+        if (historyIndex > 0) {
+            const newIndex = historyIndex - 1;
+            setHistoryIndex(newIndex);
+            const previousBoxes = history[newIndex];
+            setBoxes(previousBoxes);
+            onBoxesChange(previousBoxes);
+            setSelectedIndex(null);
+            onSelectBox && onSelectBox(null);
+            console.log("↶ Undo performed");
+        }
+    };
+
+    // ✅ REDO
+    const handleRedo = () => {
+        if (historyIndex < history.length - 1) {
+            const newIndex = historyIndex + 1;
+            setHistoryIndex(newIndex);
+            const nextBoxes = history[newIndex];
+            setBoxes(nextBoxes);
+            onBoxesChange(nextBoxes);
+            setSelectedIndex(null);
+            onSelectBox && onSelectBox(null);
+            console.log("↷ Redo performed");
+        }
+    };
+
+    // ✅ Keyboard shortcuts for Undo/Redo (Ctrl+Z, Ctrl+Y, Ctrl+Shift+Z)
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === "z" && !e.shiftKey) {
+                e.preventDefault();
+                handleUndo();
+            } else if ((e.ctrlKey || e.metaKey) && (e.key === "y" || (e.shiftKey && e.key === "z"))) {
+                e.preventDefault();
+                handleRedo();
+            }
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [historyIndex, history]);
 
     // ============================
     // LOAD IMAGE + BOXES FROM BACKEND
@@ -65,29 +125,31 @@ export default function ImageCanvas({
                 const boxesFromServer = await getBoundingBoxesByMedia(currentMediaId);
                 console.log("✅ Loaded boxes for mediaId", currentMediaId, ":", boxesFromServer);
 
-                // Log what we're getting
                 boxesFromServer.forEach((b, i) => {
                     console.log(`  Box ${i}: labelClassId=${b.labelClassId}, className=${b.className}`);
                 });
 
-                setBoxes(
-                    boxesFromServer.map((b) => {
-                        const meta =
-                            labelClasses?.find((lc) => lc.id === b.labelClassId) ?? null;
+                const loadedBoxes = boxesFromServer.map((b) => {
+                    const meta =
+                        labelClasses?.find((lc) => lc.id === b.labelClassId) ?? null;
 
-                        return {
-                            id: b.boundingBoxId,
-                            mediaId: b.mediaId,
-                            labelClassId: b.labelClassId,
-                            label: meta?.name || b.className || "Unlabeled",
-                            color: meta?.color || "#e53935",
-                            x: b.x1,
-                            y: b.y1,
-                            width: b.x2 - b.x1,
-                            height: b.y2 - b.y1,
-                        };
-                    })
-                );
+                    return {
+                        id: b.boundingBoxId,
+                        mediaId: b.mediaId,
+                        labelClassId: b.labelClassId,
+                        label: meta?.name || b.className || "Unlabeled",
+                        color: meta?.color || "#e53935",
+                        x: b.x1,
+                        y: b.y1,
+                        width: b.x2 - b.x1,
+                        height: b.y2 - b.y1,
+                    };
+                });
+
+                setBoxes(loadedBoxes);
+                // ✅ Reset history when loading new file
+                setHistory([loadedBoxes]);
+                setHistoryIndex(0);
             } catch (err) {
                 console.error("❌ Failed to load bounding boxes:", err);
             }
@@ -104,7 +166,6 @@ export default function ImageCanvas({
     // ============================
     // NOTIFY PARENT OF BOX CHANGES
     // ============================
-    // ✅ NEW: Separate effect to avoid setState during render
     useEffect(() => {
         if (onBoxesChange) {
             onBoxesChange(boxes);
@@ -155,7 +216,21 @@ export default function ImageCanvas({
             )
             : boxes;
 
-        visibleBoxes.forEach((b, i) => drawBox(ctx, b, i === selectedIndex));
+        // ✅ FEATURE: Isolate Mode - Draw with opacity control
+        visibleBoxes.forEach((b, i) => {
+            const isSelected = i === selectedIndex;
+
+            // Apply opacity based on isolate mode
+            if (isolateMode && selectedIndex !== null && !isSelected) {
+                ctx.globalAlpha = 0.2; // Fade non-selected boxes
+            } else {
+                ctx.globalAlpha = 1; // Full opacity
+            }
+
+            drawBox(ctx, b, isSelected);
+            ctx.globalAlpha = 1; // Reset after each box
+        });
+
         if (tempBox) drawBox(ctx, tempBox, false, true);
     };
 
@@ -163,7 +238,13 @@ export default function ImageCanvas({
         ctx.strokeStyle = b.color;
         ctx.lineWidth = selected ? 3 : temp ? 1.5 : 2;
         ctx.setLineDash(selected ? [5, 5] : []);
-        ctx.globalAlpha = temp ? 0.6 : 1;
+
+        // ✅ Only modify alpha if it's a temp box, otherwise preserve current alpha
+        if (temp) {
+            ctx.globalAlpha = 0.6;
+        }
+        // If not temp, keep the current globalAlpha (set by isolate mode or parent)
+
         ctx.strokeRect(b.x, b.y, b.width, b.height);
         ctx.globalAlpha = 1;
         ctx.font = "14px Arial";
@@ -243,7 +324,6 @@ export default function ImageCanvas({
             const dx = x - start.x;
             const dy = y - start.y;
 
-            // ✅ CHANGED: Don't call onBoxesChange here, it will be called by the effect
             setBoxes((prev) => {
                 return prev.map((b, i) =>
                     i === selectedIndex ? { ...b, x: b.x + dx, y: b.y + dy } : b
@@ -289,7 +369,6 @@ export default function ImageCanvas({
                 console.log("📦 activeClass.id:", activeClass?.id);
                 console.log("📦 activeClass keys:", Object.keys(activeClass || {}));
 
-
                 const payload = {
                     mediaId: currentMediaId,
                     labelClassId: newBox.labelClassId ?? 1,
@@ -321,13 +400,13 @@ export default function ImageCanvas({
                         height: created.y2 - created.y1,
                     };
 
-                    // ✅ CHANGED: Removed onBoxesChange call, effect handles it
-                    setBoxes((prev) => [...prev, newBoxWithId]);
+                    // ✅ Save to history
+                    saveToHistory([...boxes, newBoxWithId]);
                     onSelectBox && onSelectBox(newBoxWithId);
                 } catch (err) {
                     console.error("❌ Failed to create bounding box:", err);
                     const fallback = { ...newBox, id: Date.now() };
-                    setBoxes((prev) => [...prev, fallback]);
+                    saveToHistory([...boxes, fallback]);
                     onSelectBox && onSelectBox(fallback);
                 }
             }
@@ -343,6 +422,8 @@ export default function ImageCanvas({
                     y2: box.y + box.height,
                     mediaId: currentMediaId,
                 });
+                // ✅ Save to history after successful update
+                saveToHistory(boxes);
             } catch (err) {
                 console.error("❌ Failed to update bounding box:", err);
             }
@@ -371,8 +452,9 @@ export default function ImageCanvas({
                     console.error("❌ Failed to delete bounding box:", err);
                 }
 
-                // ✅ CHANGED: Removed onBoxesChange, effect handles it
-                setBoxes((prev) => prev.filter((_, i) => i !== selectedIndex));
+                // ✅ Save to history after deletion
+                const newBoxes = boxes.filter((_, i) => i !== selectedIndex);
+                saveToHistory(newBoxes);
                 onSelectBox && onSelectBox(null);
                 setSelectedIndex(null);
                 return;
@@ -391,21 +473,20 @@ export default function ImageCanvas({
                 if (!newClass) return;
 
                 let updatedBox = null;
-                setBoxes((prev) => {
-                    const next = prev.map((b, i) => {
-                        if (i !== selectedIndex) return b;
-                        const changed = {
-                            ...b,
-                            label: newClass.name,
-                            labelClassId: newClass.id,
-                            color: newClass.color,
-                        };
-                        updatedBox = changed;
-                        return changed;
-                    });
-                    return next;
+                const newBoxes = boxes.map((b, i) => {
+                    if (i !== selectedIndex) return b;
+                    const changed = {
+                        ...b,
+                        label: newClass.name,
+                        labelClassId: newClass.id,
+                        color: newClass.color,
+                    };
+                    updatedBox = changed;
+                    return changed;
                 });
 
+                // ✅ Save to history after class change
+                saveToHistory(newBoxes);
                 onSelectBox && onSelectBox(updatedBox);
 
                 if (updatedBox) {
@@ -428,7 +509,7 @@ export default function ImageCanvas({
 
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [selectedIndex, boxes, labelClasses, onSelectBox, currentMediaId]);
+    }, [selectedIndex, boxes, labelClasses, onSelectBox, currentMediaId, history, historyIndex]);
 
     // ============================
     // HELPERS
@@ -476,10 +557,17 @@ export default function ImageCanvas({
 
     useEffect(() => {
         drawAll();
-    }, [boxes, activeClass, selectedIndex, visibleLabel]);
+    }, [boxes, activeClass, selectedIndex, visibleLabel, isolateMode]);
 
+    // ✅ FEATURE: Cursor - Color Mode + Crosshair Toggle
     const getCursor = () => {
+        // If drawing, always show standard crosshair
         if (drawing) return "crosshair";
+
+        // If crosshair is OFF, show default cursor
+        if (!showCrosshair) return "default";
+
+        // ✅ If cursor color mode is ON AND we have an active class with a color
         if (cursorColorMode && activeClass?.color) {
             const svg = `
       <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32">
@@ -491,10 +579,11 @@ export default function ImageCanvas({
                 svg
             )}') 16 16, crosshair`;
         }
+
+        // Default: standard crosshair
         return "crosshair";
     };
 
-    // ✅ Show loading if no files
     if (!currentFile) {
         return (
             <div className="canvas-wrapper">
@@ -508,7 +597,6 @@ export default function ImageCanvas({
     return (
         <div className="canvas-wrapper">
             <div className="image-canvas">
-                {/* ✅ File Navigation - only show if files exist */}
                 {currentFile && (
                     <div style={{
                         marginBottom: '10px',
@@ -569,7 +657,6 @@ export default function ImageCanvas({
                     </div>
                 )}
 
-                {/* ✅ CANVAS - Always rendered */}
                 <div className="image-wrapper">
                     <canvas
                         ref={canvasRef}

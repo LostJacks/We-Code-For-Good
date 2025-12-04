@@ -6,10 +6,12 @@ export default function LeftSidebar({
     onSelectClass,
     labelClasses,
     setLabelClasses,
-    onFilterChange, // ✅ from LabelPage
+    onFilterChange,
+    onCursorModeChange,
+    onShowCrosshairChange,
+    onIsolateModeChange,
 }) {
     const [searchTerm, setSearchTerm] = useState("");
-    const [cursorColorMode, setCursorColorMode] = useState(false); // ✅ NEW toggle state
 
     // --- Handle number key shortcuts globally ---
     useEffect(() => {
@@ -51,9 +53,16 @@ export default function LeftSidebar({
                     ? "0" // 10th shortcut is 0
                     : "-"; // after 0, no shortcut
 
+        const newId = Math.max(...labelClasses.map(c => c.id || 0), 0) + 1;
+
         setLabelClasses([
             ...labelClasses,
-            { name: newName, color: newColor, shortcut },
+            {
+                id: newId,
+                name: newName,
+                color: newColor,
+                shortcut
+            },
         ]);
     };
 
@@ -102,31 +111,39 @@ export default function LeftSidebar({
 
             {/* OPTIONS */}
             <div className="options-section">
-                {/* ✅ Cursor color toggle now works */}
+                {/* ✅ Cursor color toggle */}
                 <div className="option-row">
                     <span>Cursor = class color</span>
                     <label className="toggle-switch">
                         <input
                             type="checkbox"
-                            checked={cursorColorMode}
-                            onChange={(e) => setCursorColorMode(e.target.checked)}
+                            onChange={(e) => onCursorModeChange && onCursorModeChange(e.target.checked)}
                         />
                         <span className="slider"></span>
                     </label>
                 </div>
 
+                {/* ✅ Crosshair toggle */}
                 <div className="option-row">
                     <span>Crosshair</span>
                     <label className="toggle-switch">
-                        <input type="checkbox" defaultChecked />
+                        <input
+                            type="checkbox"
+                            defaultChecked
+                            onChange={(e) => onShowCrosshairChange && onShowCrosshairChange(e.target.checked)}
+                        />
                         <span className="slider"></span>
                     </label>
                 </div>
 
+                {/* ✅ Isolate box toggle */}
                 <div className="option-row">
                     <span>Isolate box (fade others)</span>
                     <label className="toggle-switch">
-                        <input type="checkbox" />
+                        <input
+                            type="checkbox"
+                            onChange={(e) => onIsolateModeChange && onIsolateModeChange(e.target.checked)}
+                        />
                         <span className="slider"></span>
                     </label>
                 </div>

@@ -106,5 +106,44 @@ namespace LabelingTool.DAL.GeneralRepositories
 
             return null;
         }
+
+        public async Task<List<LabelClassDto>> GetByProjectIdAsync(int projectId)
+        {
+            var classes = new List<LabelClassDto>();
+            try
+            {
+                using (var connection = new SqlConnection(_connectionString))
+                {
+                    await connection.OpenAsync();
+                    var command = new SqlCommand(@"
+                SELECT DISTINCT
+                    pl.[LabelName]
+                FROM [ProjectLabel] pl
+                WHERE pl.[ProjectId] = @ProjectId", connection);  // ✅ REMOVED ORDER BY
+
+                    command.Parameters.AddWithValue("@ProjectId", projectId);
+
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        int id = 0;
+                        while (await reader.ReadAsync())
+                        {
+                            classes.Add(new LabelClassDto
+                            {
+                                LabelClassId = ++id,
+                                Name = reader.GetString(0),
+                                Color = "#FF5733"  // Default color
+                            });
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("SQL error in GetByProjectIdAsync(): " + ex.Message, ex);
+            }
+
+            return classes;
+        }
     }
 }

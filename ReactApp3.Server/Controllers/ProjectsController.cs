@@ -1,7 +1,10 @@
 ﻿using LabelingTool.BLL.DTOs;        // ✅ for CreateProjectRequest
+using LabelingTool.BLL.ExportServices;
 using LabelingTool.BLL.Interfaces;
+using LabelingTool.BLL.Services;
 using LabelingTool.DAL.GeneralRepositories;
 using LabelingTool.DAL.Interfaces;
+using LabelingTool.DAL.Repositories;
 using LabelingTool.Model;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,32 +22,38 @@ namespace Smart_Server.Controllers
         private readonly IWebHostEnvironment _env;
         private readonly IProjectsService _projectsService;
         private readonly IProjectFileRepository _projectFileRepository;
+        private readonly IProjectsRepository _projectRepository;
         private readonly IMediaRepository _mediaRepository;
+        private readonly IYoloExportService _yoloExportService;
+        private readonly ILabelClassRepository _labelClassRepository;
 
-        public ProjectsController(IWebHostEnvironment env, IProjectsService projectsService, IProjectFileRepository projectFileRepository, IMediaRepository mediaRepository)
+        public ProjectsController(IWebHostEnvironment env, IProjectsService projectsService, IProjectFileRepository projectFileRepository, IMediaRepository mediaRepository, 
+            IYoloExportService yoloExportService, ILabelClassRepository labelClassRepository, IProjectsRepository projectRepository)
         {
             _env = env;
             _projectsService = projectsService;
             _projectFileRepository = projectFileRepository;
             _mediaRepository = mediaRepository;
+            _yoloExportService = yoloExportService;
+            _labelClassRepository = labelClassRepository;
+            _projectRepository = projectRepository;
         }
 
         // ============================================================
         // GET: api/projects
         // ============================================================
         [HttpGet]
-        public ActionResult<List<Project>> GetAll()
+        public async Task<ActionResult<IEnumerable<Project>>> GetAll()
         {
-            try
+            var projects = await _projectRepository.GetAllAsync();
+
+            foreach (var project in projects)
             {
-                var projects = _projectsService.GetAllProjects();
-                return Ok(projects);
+                var firstMedia = await _mediaRepository.GetByProjectIdAsync(project.Id);
+                project.PreviewImage = firstMedia?.FirstOrDefault()?.FilePath ?? "";
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"❌ Error while getting projects: {ex}");
-                return StatusCode(500, $"Error while getting projects: {ex.Message}");
-            }
+
+            return Ok(projects);
         }
 
         // ============================================================
@@ -63,8 +72,10 @@ namespace Smart_Server.Controllers
 
                 // ✅ Get files for this project
                 var projectFiles = await _projectFileRepository.GetFilesByProjectIdAsync(id);
+                var labelClasses = await _labelClassRepository.GetByProjectIdAsync(id);
 
                 Console.WriteLine($"[CTRL] Retrieved {projectFiles.Count} files");
+                Console.WriteLine($"[CTRL] Retrieved {labelClasses.Count} label classes");
 
                 return Ok(new
                 {
@@ -72,6 +83,7 @@ namespace Smart_Server.Controllers
                     title = project.Title,
                     description = project.Description,
                     createdAt = project.CreatedAt,
+                    labelClasses = labelClasses.Select(lc => lc.Name).ToList(),
                     files = projectFiles.Select(f => new
                     {
                         id = f.Id,
@@ -94,6 +106,9 @@ namespace Smart_Server.Controllers
         [Authorize]
         public ActionResult<int> Create([FromBody] LabelingTool.BLL.DTOs.CreateProjectRequest request)
         {
+            Console.WriteLine($"[CTRL] Create endpoint hit");  // ✅ ADD
+            Console.WriteLine($"[CTRL] Request: {System.Text.Json.JsonSerializer.Serialize(request)}");  // ✅ ADD
+
             if (request == null || string.IsNullOrWhiteSpace(request.Title))
                 return BadRequest("Invalid project data.");
 
@@ -116,7 +131,8 @@ namespace Smart_Server.Controllers
                     CreatedAt = DateTime.UtcNow
                 };
 
-                // ✅ Pass labels from the request (List<string>)
+                Console.WriteLine($"[CTRL] Labels count: {request.Labels?.Count ?? 0}");  // ✅ ADD
+
                 var newId = _projectsService.CreateProject(
                     project,
                     new List<ProjectFile>(),
@@ -208,6 +224,31 @@ namespace Smart_Server.Controllers
             {
                 Console.WriteLine($"❌ ERROR: {ex.Message}");
                 Console.WriteLine($"❌ STACK: {ex.StackTrace}");
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("{projectId:int}/export")]
+        [Authorize]
+        public async Task<IActionResult> ExportYolo(int projectId)
+        {
+            try
+            {
+                var project = _projectsService.GetProject(projectId);
+                if (project == null)
+                    return NotFound("Project not found");
+
+                // ✅ Generate YOLO export data
+                var yoloExport = await _yoloExportService.GenerateYoloExportAsync(projectId);
+
+                // ✅ Create ZIP file
+                var zipBytes = await _yoloExportService.CreateYoloZipAsync(yoloExport);
+
+                return File(zipBytes, "application/zip", $"project-{projectId}-export.zip");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Export error: {ex.Message}");
                 return StatusCode(500, new { message = ex.Message });
             }
         }

@@ -49,34 +49,71 @@ namespace LabelingTool.DAL.Repositories
 
 		}
 
-		public void AddLabel(int projectId, string labelName)
-		{
-			try
-			{
-				using var connection = _database.CreateOpenConnection();
+        public void AddLabel(int projectId, string labelName)
+        {
+            try
+            {
+                Console.WriteLine($"[REPO] AddLabel called: ProjectId={projectId}, LabelName={labelName}");
 
-				var sql = @"INSERT INTO [Labelclass] ([name], [color])
-                    VALUES (@name, @color)";
+                using var connection = _database.CreateOpenConnection();
+                using var transaction = connection.BeginTransaction();
 
-                using var command = new SqlCommand(sql, connection);
-				command.Parameters.AddWithValue("@name", labelName);
-				command.Parameters.AddWithValue("@color", "red");
+                try
+                {
+                    // ✅ Step 1: Insert into Labelclass if it doesn't exist
+                    var checkSql = @"SELECT [labelclass_id] FROM [Labelclass] WHERE [name] = @name";
+                    using var checkCmd = new SqlCommand(checkSql, connection, transaction);
+                    checkCmd.Parameters.AddWithValue("@name", labelName);
+                    var labelClassId = checkCmd.ExecuteScalar();
+
+                    if (labelClassId == null)
+                    {
+                        // Insert new label class
+                        var insertSql = @"INSERT INTO [Labelclass] ([name], [color])
+                                  OUTPUT INSERTED.[labelclass_id]
+                                  VALUES (@name, @color)";
+                        using var insertCmd = new SqlCommand(insertSql, connection, transaction);
+                        insertCmd.Parameters.AddWithValue("@name", labelName);
+                        insertCmd.Parameters.AddWithValue("@color", "#FF5733");  // Default color
+                        labelClassId = insertCmd.ExecuteScalar();
+                        Console.WriteLine($"[REPO] Created new Labelclass with ID: {labelClassId}");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"[REPO] Using existing Labelclass ID: {labelClassId}");
+                    }
+
+                    // ✅ Step 2: Link to project in ProjectLabel
+                    var linkSql = @"INSERT INTO [ProjectLabel] ([ProjectId], [LabelName])
+                           VALUES (@ProjectId, @LabelName)";
+                    using var linkCmd = new SqlCommand(linkSql, connection, transaction);
+                    linkCmd.Parameters.AddWithValue("@ProjectId", projectId);
+                    linkCmd.Parameters.AddWithValue("@LabelName", labelName);
+                    linkCmd.ExecuteNonQuery();
+
+                    transaction.Commit();
+                    Console.WriteLine($"[REPO] ✅ Label linked to project");
+                }
+                catch
+                {
+                    transaction.Rollback();
+                    throw;
+                }
+            }
+            catch (SqlException ex)
+            {
+                Console.WriteLine($"[REPO] ❌ SQL error: {ex.Message}");
+                throw new Exception("SQL error in AddLabel(): " + ex.Message, ex);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[REPO] ❌ Error: {ex.Message}");
+                throw new Exception("Unexpected error in AddLabel(): " + ex.Message, ex);
+            }
+        }
 
 
-				command.ExecuteNonQuery();
-			}
-			catch (SqlException ex)
-			{
-				throw new Exception("SQL error in AddLabel(): " + ex.Message, ex);
-			}
-			catch (Exception ex)
-			{
-				throw new Exception("Unexpected error in AddLabel(): " + ex.Message, ex);
-			}
-		}
-
-
-		public int Create(Project project)
+        public int Create(Project project)
 		{
 			try
 			{
@@ -228,8 +265,71 @@ namespace LabelingTool.DAL.Repositories
 
 			return projects;
 		}
+        public async Task<List<Project>> GetAllAsync()
+        {
+            var projects = new List<Project>();
+            try
+            {
+                using var connection = _database.CreateOpenConnection();
+                using var command = new SqlCommand(@"
+            SELECT [Id], [UserId], [Title], [Description], [CreatedAt]
+            FROM [Project]
+            ORDER BY [CreatedAt] DESC", connection);
 
+                using var reader = await command.ExecuteReaderAsync();
 
-	}
+                while (await reader.ReadAsync())
+                {
+                    var projectId = reader.GetInt32(0);
+                    var project = new Project
+                    {
+                        Id = projectId,
+                        UserId = reader.GetInt32(1),
+                        Title = reader.GetString(2),
+                        Description = reader.IsDBNull(3) ? "" : reader.GetString(3),
+                        CreatedAt = reader.GetDateTime(4),
+                        Labels = GetProjectLabels(projectId)  // ✅ Don't pass connection
+                    };
+                    projects.Add(project);
+                }
+            }
+            catch (SqlException ex)
+            {
+                throw new Exception("SQL error in GetAllAsync(): " + ex.Message, ex);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Unexpected error in GetAllAsync(): " + ex.Message, ex);
+            }
+
+            return projects;
+        }
+
+        // ✅ Create its own connection
+        private List<ProjectLabel> GetProjectLabels(int projectId)
+        {
+            var labels = new List<ProjectLabel>();
+            var sql = @"SELECT [Id], [ProjectId], [LabelName]
+               FROM [ProjectLabel]
+               WHERE [ProjectId] = @ProjectId";
+
+            using var connection = _database.CreateOpenConnection();  // ✅ NEW connection
+            using var command = new SqlCommand(sql, connection);
+            command.Parameters.AddWithValue("@ProjectId", projectId);
+
+            using var reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                labels.Add(new ProjectLabel
+                {
+                    Id = reader.GetInt32(0),
+                    ProjectId = reader.GetInt32(1),
+                    LabelName = reader.GetString(2)
+                });
+            }
+
+            return labels;
+        }
+    }
 }
 

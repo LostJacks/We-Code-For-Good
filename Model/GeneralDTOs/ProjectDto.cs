@@ -13,11 +13,13 @@ namespace Model.GeneralDTOs
         public required string Name { get; set; }
         public required string Description { get; set; }
         public DateTime CreatedDate { get; set; }
+        public string PreviewImage { get; set; } = "";
     }
 
     public class CreateProjectRequest
     {
         public required string Name { get; set; }
         public required string Description { get; set; }
+        public List<string> Labels { get; set; } = new();
     }
 }
