@@ -31,6 +31,45 @@ export default function ImageCanvas({
     const [resizing, setResizing] = useState(false);
     const [resizeCorner, setResizeCorner] = useState(null);
 
+    //Zoom State
+    const [viewScale, setViewScale] = useState(1);
+    const [viewX, setViewX] = useState(0);
+    const [viewY, setViewY] = useState(0);
+
+    const MIN_SCALE = 0.5;
+    const MAX_SCALE = 6;
+
+    const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+
+    //Panning
+    const [isPanning, setIsPanning] = useState(false);
+    const [lastPanPos, setLastPanPos] = useState({ x: 0, y: 0 });
+    const [spaceDown, setSpaceDown] = useState(false);
+
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.code === "Space") {
+                e.preventDefault();
+                setSpaceDown(true);
+            }
+        };
+
+        const handleKeyUp = (e) => {
+            if (e.code === "Space") {
+                e.preventDefault();
+                setSpaceDown(false);
+                setIsPanning(false);
+            }
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+        window.addEventListener("keyup", handleKeyUp);
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown);
+            window.removeEventListener("keyup", handleKeyUp);
+        };
+    }, []);
+
     // ✅ UNDO/REDO STATE
     const [history, setHistory] = useState([[]]);
     const [historyIndex, setHistoryIndex] = useState(0);
@@ -198,6 +237,45 @@ export default function ImageCanvas({
         return () => window.removeEventListener("resize", handleResize);
     }, []);
 
+    //Reset Zoom on image change
+    useEffect(() => {
+        setViewScale(1);
+        setViewX(0);
+        setViewY(0);
+    }, [imageUrl]);
+
+    //Wheel Zoom
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        const onWheel = (e) => {
+            e.preventDefault();
+
+            const rect = canvas.getBoundingClientRect();
+            const sx = e.clientX - rect.left;
+            const sy = e.clientY - rect.top;
+
+            // cursor position in world coords (before zoom)
+            const wx = sx / viewScale + viewX;
+            const wy = sy / viewScale + viewY;
+
+            const factor = e.deltaY < 0 ? 1.1 : 1 / 1.1;
+            const nextScale = clamp(viewScale * factor, MIN_SCALE, MAX_SCALE);
+
+            // adjust viewX/viewY so (wx,wy) stays under cursor after zoom
+            const nextViewX = wx - sx / nextScale;
+            const nextViewY = wy - sy / nextScale;
+
+            setViewScale(nextScale);
+            setViewX(nextViewX);
+            setViewY(nextViewY);
+        };
+
+        canvas.addEventListener("wheel", onWheel, { passive: false });
+        return () => canvas.removeEventListener("wheel", onWheel);
+    }, [viewScale, viewX, viewY]);
+
     // ============================
     // DRAWING LOGIC
     // ============================
@@ -206,32 +284,36 @@ export default function ImageCanvas({
         if (!canvas || !imgRef.current) return;
         const ctx = canvas.getContext("2d");
 
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        const { width, height } = canvas.getBoundingClientRect();
-        ctx.drawImage(imgRef.current, 0, 0, width, height);
+        const { width: cw, height: ch } = canvas.getBoundingClientRect();
+
+        console.log("drawAll camera:", { viewX, viewY, viewScale });
+
+        ctx.clearRect(0, 0, cw, ch);
+
+        ctx.save();
+
+        ctx.translate(-viewX * viewScale, -viewY * viewScale);
+        ctx.scale(viewScale, viewScale);
+
+        ctx.drawImage(imgRef.current, 0, 0, cw, ch);
 
         const visibleBoxes = visibleLabel
-            ? boxes.filter((b) =>
-                b.label.toLowerCase().includes(visibleLabel.toLowerCase())
-            )
+            ? boxes.filter((b) => b.label.toLowerCase().includes(visibleLabel.toLowerCase()))
             : boxes;
 
-        // ✅ FEATURE: Isolate Mode - Draw with opacity control
         visibleBoxes.forEach((b, i) => {
             const isSelected = i === selectedIndex;
 
-            // Apply opacity based on isolate mode
-            if (isolateMode && selectedIndex !== null && !isSelected) {
-                ctx.globalAlpha = 0.2; // Fade non-selected boxes
-            } else {
-                ctx.globalAlpha = 1; // Full opacity
-            }
+            if (isolateMode && selectedIndex !== null && !isSelected) ctx.globalAlpha = 0.2;
+            else ctx.globalAlpha = 1;
 
             drawBox(ctx, b, isSelected);
-            ctx.globalAlpha = 1; // Reset after each box
+            ctx.globalAlpha = 1;
         });
 
         if (tempBox) drawBox(ctx, tempBox, false, true);
+
+        ctx.restore();
     };
 
     const drawBox = (ctx, b, selected = false, temp = false) => {
@@ -266,19 +348,30 @@ export default function ImageCanvas({
     // MOUSE HANDLERS
     // ============================
     const getMousePos = (e) => {
-        const rect = e.target.getBoundingClientRect();
-        const scaleX = canvasRef.current.width / rect.width;
-        const scaleY = canvasRef.current.height / rect.height;
-        const dpr = window.devicePixelRatio || 1;
+        const rect = canvasRef.current.getBoundingClientRect();
 
-        return {
-            x: ((e.clientX - rect.left) * scaleX) / dpr,
-            y: ((e.clientY - rect.top) * scaleY) / dpr,
-        };
+        const sx = e.clientX - rect.left;
+        const sy = e.clientY - rect.top;
+
+        const x = sx / viewScale + viewX;
+        const y = sy / viewScale + viewY;
+
+        return { x, y };
     };
 
     const handleMouseDown = (e) => {
+        const rect = canvasRef.current.getBoundingClientRect();
+        const sx = e.clientX - rect.left;
+        const sy = e.clientY - rect.top;
+
+        if (spaceDown) {
+            setIsPanning(true);
+            setLastPanPos({ x: sx, y: sy });
+            return;
+        }
+
         const { x, y } = getMousePos(e);
+
         const clickedIndex = findBoxAt(x, y);
 
         if (clickedIndex !== null && selectedIndex === clickedIndex) {
@@ -303,6 +396,32 @@ export default function ImageCanvas({
     };
 
     const handleMouseMove = (e) => {
+        const rect = canvasRef.current.getBoundingClientRect();
+        const sx = e.clientX - rect.left;
+        const sy = e.clientY - rect.top;
+
+        if (isPanning) {
+            const dxScreen = sx - lastPanPos.x;
+            const dyScreen = sy - lastPanPos.y;
+
+            const dxWorld = dxScreen / viewScale;
+            const dyWorld = dyScreen / viewScale;
+
+            setViewX((prev) => {
+                const next = prev - dxWorld;
+                console.log("pan viewX", { prev, next, dxWorld });
+                return next;
+            });
+            setViewY((prev) => {
+                const next = prev - dyWorld;
+                console.log("pan viewY", { prev, next, dyWorld });
+                return next;
+            });
+
+            setLastPanPos({ x: sx, y: sy });
+            return;
+        }
+
         const { x, y } = getMousePos(e);
 
         if (drawing) {
@@ -324,11 +443,11 @@ export default function ImageCanvas({
             const dx = x - start.x;
             const dy = y - start.y;
 
-            setBoxes((prev) => {
-                return prev.map((b, i) =>
+            setBoxes((prev) =>
+                prev.map((b, i) =>
                     i === selectedIndex ? { ...b, x: b.x + dx, y: b.y + dy } : b
-                );
-            });
+                )
+            );
 
             onSelectBox && onSelectBox(boxes[selectedIndex]);
             setStart({ x, y });
@@ -348,6 +467,11 @@ export default function ImageCanvas({
     };
 
     const handleMouseUp = async (e) => {
+        if (isPanning) {
+            setIsPanning(false);
+            return;
+        }
+
         const { x, y } = getMousePos(e);
 
         if (drawing) {
@@ -557,17 +681,15 @@ export default function ImageCanvas({
 
     useEffect(() => {
         drawAll();
-    }, [boxes, activeClass, selectedIndex, visibleLabel, isolateMode]);
+    }, [boxes, activeClass, selectedIndex, visibleLabel, isolateMode, viewX, viewY, viewScale]);
 
     // ✅ FEATURE: Cursor - Color Mode + Crosshair Toggle
     const getCursor = () => {
-        // If drawing, always show standard crosshair
-        if (drawing) return "crosshair";
+        if (isPanning || spaceDown) return "grab";
 
-        // If crosshair is OFF, show default cursor
+        if (drawing) return "crosshair";
         if (!showCrosshair) return "default";
 
-        // ✅ If cursor color mode is ON AND we have an active class with a color
         if (cursorColorMode && activeClass?.color) {
             const svg = `
       <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32">
@@ -580,7 +702,6 @@ export default function ImageCanvas({
             )}') 16 16, crosshair`;
         }
 
-        // Default: standard crosshair
         return "crosshair";
     };
 
