@@ -1,6 +1,6 @@
 ﻿import React from "react";
 
-export default function RightSidebar({ activeClass, selectedBox }) {
+export default function RightSidebar({ activeClass, selectedBox, onDuplicate }) {
     return (
         <div className="right-sidebar">
             {/* 🔹 Current Label Section */}
@@ -81,7 +81,9 @@ export default function RightSidebar({ activeClass, selectedBox }) {
             <div className="actions-title">Actions</div>
 
             <div className="actions-list">
-                <button className="action-btn small">
+                <button className="action-btn small"
+                    onClick={() => onDuplicate && onDuplicate()}
+                >
                     Duplicate <span className="action-icon">📄</span>
                 </button>
 

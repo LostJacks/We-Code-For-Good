@@ -24,6 +24,7 @@ export default function ImageCanvas({
     const imgRef = useRef(null);
 
     const [boxes, setBoxes] = useState([]);
+    const [tempBox, setTempBox] = useState(null);
     const [drawing, setDrawing] = useState(false);
     const [start, setStart] = useState({ x: 0, y: 0 });
     const [selectedIndex, setSelectedIndex] = useState(null);
@@ -45,6 +46,9 @@ export default function ImageCanvas({
     const [isPanning, setIsPanning] = useState(false);
     const [lastPanPos, setLastPanPos] = useState({ x: 0, y: 0 });
     const [spaceDown, setSpaceDown] = useState(false);
+
+    //Crosshair image alignment
+    const [crosshairPos, setCrosshairPos] = useState(null);
 
     useEffect(() => {
         const handleKeyDown = (e) => {
@@ -279,7 +283,24 @@ export default function ImageCanvas({
     // ============================
     // DRAWING LOGIC
     // ============================
-    const drawAll = (tempBox = null) => {
+    const drawBox = (ctx, b, selected = false, temp = false) => {
+        ctx.strokeStyle = b.color;
+        ctx.lineWidth = selected ? 3 : temp ? 1.5 : 2;
+        ctx.setLineDash(selected ? [5, 5] : []);
+
+        if (temp) {
+            ctx.globalAlpha = 0.6;
+        }
+
+        ctx.strokeRect(b.x, b.y, b.width, b.height);
+        ctx.globalAlpha = 1;
+        ctx.font = "14px Arial";
+        ctx.fillStyle = b.color;
+        ctx.fillText(b.label, b.x + 4, b.y - 6);
+        ctx.setLineDash([]);
+    };
+
+    const drawAll = () => {
         const canvas = canvasRef.current;
         if (!canvas || !imgRef.current) return;
         const ctx = canvas.getContext("2d");
@@ -289,50 +310,69 @@ export default function ImageCanvas({
         console.log("drawAll camera:", { viewX, viewY, viewScale });
 
         ctx.clearRect(0, 0, cw, ch);
-
         ctx.save();
 
         ctx.translate(-viewX * viewScale, -viewY * viewScale);
         ctx.scale(viewScale, viewScale);
 
+        // 1) draw image
         ctx.drawImage(imgRef.current, 0, 0, cw, ch);
 
+        // 2) alignment crosshair BEHIND boxes
+        if (crosshairPos && showCrosshair) {
+            const { x, y } = crosshairPos;
+
+            ctx.save();
+            ctx.setLineDash([]);
+            ctx.globalAlpha = 0.9;
+            ctx.strokeStyle = "#ffffff";
+            ctx.lineWidth = 1;
+            ctx.shadowColor = "rgba(0,0,0,0.6)";
+            ctx.shadowBlur = 2;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+
+            const imgWidth = cw;
+            const imgHeight = ch;
+
+            // horizontal line
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(imgWidth, y);
+            ctx.stroke();
+
+            // vertical line
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, imgHeight);
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        // 3) draw boxes
         const visibleBoxes = visibleLabel
-            ? boxes.filter((b) => b.label.toLowerCase().includes(visibleLabel.toLowerCase()))
+            ? boxes.filter((b) =>
+                b.label.toLowerCase().includes(visibleLabel.toLowerCase())
+            )
             : boxes;
 
         visibleBoxes.forEach((b, i) => {
             const isSelected = i === selectedIndex;
 
-            if (isolateMode && selectedIndex !== null && !isSelected) ctx.globalAlpha = 0.2;
-            else ctx.globalAlpha = 1;
+            if (isolateMode && selectedIndex !== null && !isSelected)
+                ctx.globalAlpha = 0.2;
+            else
+                ctx.globalAlpha = 1;
 
             drawBox(ctx, b, isSelected);
             ctx.globalAlpha = 1;
         });
 
+        // 4) temp box
         if (tempBox) drawBox(ctx, tempBox, false, true);
 
         ctx.restore();
-    };
-
-    const drawBox = (ctx, b, selected = false, temp = false) => {
-        ctx.strokeStyle = b.color;
-        ctx.lineWidth = selected ? 3 : temp ? 1.5 : 2;
-        ctx.setLineDash(selected ? [5, 5] : []);
-
-        // ✅ Only modify alpha if it's a temp box, otherwise preserve current alpha
-        if (temp) {
-            ctx.globalAlpha = 0.6;
-        }
-        // If not temp, keep the current globalAlpha (set by isolate mode or parent)
-
-        ctx.strokeRect(b.x, b.y, b.width, b.height);
-        ctx.globalAlpha = 1;
-        ctx.font = "14px Arial";
-        ctx.fillStyle = b.color;
-        ctx.fillText(b.label, b.x + 4, b.y - 6);
-        ctx.setLineDash([]);
     };
 
     const findBoxAt = (x, y) => {
@@ -424,11 +464,16 @@ export default function ImageCanvas({
 
         const { x, y } = getMousePos(e);
 
+        if (showCrosshair) {
+            setCrosshairPos({ x, y });
+        }
+
         if (drawing) {
             const width = Math.abs(x - start.x);
             const height = Math.abs(y - start.y);
+
             if (width > MIN_BOX_SIZE && height > MIN_BOX_SIZE) {
-                drawAll({
+                setTempBox({
                     x: Math.min(start.x, x),
                     y: Math.min(start.y, y),
                     width,
@@ -437,9 +482,12 @@ export default function ImageCanvas({
                     label: activeClass?.name || "Unlabeled",
                 });
             } else {
-                drawAll();
+                setTempBox(null);
             }
-        } else if (dragging && selectedIndex !== null) {
+            return;
+        }
+
+        if (dragging && selectedIndex !== null) {
             const dx = x - start.x;
             const dy = y - start.y;
 
@@ -451,8 +499,10 @@ export default function ImageCanvas({
 
             onSelectBox && onSelectBox(boxes[selectedIndex]);
             setStart({ x, y });
-            drawAll();
-        } else if (resizing && selectedIndex !== null) {
+            return;
+        }
+
+        if (resizing && selectedIndex !== null) {
             setBoxes((prev) => {
                 const next = prev.map((b, i) => {
                     if (i !== selectedIndex) return b;
@@ -462,7 +512,7 @@ export default function ImageCanvas({
                 });
                 return next;
             });
-            drawAll();
+            return;
         }
     };
 
@@ -534,6 +584,8 @@ export default function ImageCanvas({
                     onSelectBox && onSelectBox(fallback);
                 }
             }
+
+            setTempBox(null);
         } else if (selectedIndex !== null && (dragging || resizing)) {
             const box = boxes[selectedIndex];
             try {
@@ -546,7 +598,6 @@ export default function ImageCanvas({
                     y2: box.y + box.height,
                     mediaId: currentMediaId,
                 });
-                // ✅ Save to history after successful update
                 saveToHistory(boxes);
             } catch (err) {
                 console.error("❌ Failed to update bounding box:", err);
@@ -681,7 +732,7 @@ export default function ImageCanvas({
 
     useEffect(() => {
         drawAll();
-    }, [boxes, activeClass, selectedIndex, visibleLabel, isolateMode, viewX, viewY, viewScale]);
+    }, [boxes, tempBox, activeClass, selectedIndex, visibleLabel, isolateMode, viewX, viewY, viewScale, crosshairPos,]);
 
     // ✅ FEATURE: Cursor - Color Mode + Crosshair Toggle
     const getCursor = () => {
@@ -784,6 +835,7 @@ export default function ImageCanvas({
                         onMouseDown={handleMouseDown}
                         onMouseMove={handleMouseMove}
                         onMouseUp={handleMouseUp}
+                        onMouseLeave={() => setCrosshairPos(null)}
                         style={{
                             width: "100%",
                             height: "100%",

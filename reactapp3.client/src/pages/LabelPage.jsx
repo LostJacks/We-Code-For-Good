@@ -8,6 +8,7 @@ import ImageCanvas from "@/components/ImageCanvas";
 import RightSidebar from "@/components/RightSidebar";
 import FrameStrip from "@/components/FrameStrip";
 import { FaCog } from "react-icons/fa";
+import { createBoundingBox } from "@/api/boundingBoxApi";
 
 import "@/styles/labelPage.css";
 
@@ -131,6 +132,36 @@ export default function LabelPage() {
         }
     };
 
+    const handleDuplicateToNext = async () => {
+        if (currentFileIndex >= files.length - 1) return;
+
+        const nextFile = files[currentFileIndex + 1];
+        if (!nextFile) return;
+
+        const targetMediaId = nextFile.mediaId ?? nextFile.id;
+        console.log("🔁 Duplicating to next mediaId:", targetMediaId, nextFile);
+
+        for (const b of boxes) {
+            const payload = {
+                mediaId: targetMediaId,
+                labelClassId: b.labelClassId,
+                x1: b.x,
+                y1: b.y,
+                x2: b.x + b.width,
+                y2: b.y + b.height,
+            };
+            console.log("▶ DUP CREATE /api/boundingbox", payload);
+
+            try {
+                await createBoundingBox(payload);
+            } catch (err) {
+                console.error("❌ Failed to duplicate box:", err);
+            }
+        }
+
+        setCurrentFileIndex((idx) => idx + 1);
+    };
+
     // =========================================
     // ✅ LOADING STATE
     // =========================================
@@ -246,7 +277,11 @@ export default function LabelPage() {
                     isolateMode={isolateMode}
                 />
 
-                <RightSidebar activeClass={activeClass} selectedBox={selectedBox} />
+                <RightSidebar
+                    activeClass={activeClass}
+                    selectedBox={selectedBox}
+                    onDuplicate={handleDuplicateToNext}
+                />
             </div>
 
             {/* FRAME STRIP */}
